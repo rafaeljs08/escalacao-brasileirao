@@ -431,7 +431,8 @@ Asset Manager (providers, cache incremental, retry, 404/429/403, painel e API).
 
 ## 👨‍💻 Autor
 
-**Rafael Junqueira**
+**Rafael Junqueira de Souza**
+**Vitor Faria De Oliveira e Silva**
 
 Trabalho da disciplina **Programação Backend (Python/Django)**
 
