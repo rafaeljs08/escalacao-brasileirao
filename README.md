@@ -61,54 +61,53 @@ laterais.
 
 ## 🎬 Demonstração
 
-Telas do sistema, recortadas só na interface (sem barra do navegador nem desktop).
-Tutorial em vídeo, sem narração:
+Capturas só da interface — sem barra do navegador, cursor nem desktop.
+Vídeo curto com as cinco telas, em sequência:
 
-<video src="docs/assets/demo-escalacao.mp4" poster="docs/assets/demo-campo.png" width="920" controls playsinline>
-</video>
+<p align="center">
+  <video src="docs/assets/demo-escalacao.mp4" poster="docs/assets/demo-campo.png" width="920" controls playsinline></video><br>
+  <a href="docs/assets/demo-escalacao.mp4">Assistir o tutorial (MP4)</a>
+</p>
 
-<p align="center"><a href="docs/assets/demo-escalacao.mp4">Assistir o tutorial (MP4)</a></p>
+### 1. Lista de times
 
-### Lista de times
-
-Tela inicial: times criados, formação, escudos empilhados e progresso da escalação.
+Tela inicial: times criados, formação, escudos e progresso da escalação.
 
 <p align="center">
   <img src="docs/assets/demo-lista-times.png" alt="Lista de times — Monte a sua escalação" width="920">
 </p>
 
-### Campo interativo
+### 2. Campo interativo
 
-Escalação 4-3-3 no gramado, com jogadores de clubes diferentes, estatísticas e elenco ao lado.
-
-<p align="center">
-  <img src="docs/assets/demo-campo.png" alt="Campo interativo da Seleção do Brasileirão em 4-3-3" width="920">
-</p>
-
-### Catálogo da Série A
-
-Página **Jogadores**: elenco separado por posição (goleiros, zaga, laterais, meias,
-atacantes) e função tática (CA, MAT, LD…), com filtro por chips.
+Escalação 4-3-3 no gramado. No elenco ao lado, os jogadores já vêm separados por posição.
 
 <p align="center">
-  <img src="docs/assets/demo-catalogo-atletas.png" alt="Catálogo de atletas filtrado pelo Flamengo" width="920">
+  <img src="docs/assets/demo-campo.png" alt="Campo 4-3-3 da Seleção do Brasileirão, com elenco agrupado por posição" width="920">
 </p>
 
-### Busca no formulário
+### 3. Catálogo da Série A
 
-Ao escalar ou editar, a busca **“Buscar no elenco da Série A”** preenche nome, clube,
-posição, função, camisa e gols — ainda dá para cadastrar na mão.
+Página **Jogadores**: chips de setor (goleiros, zaga, laterais, meias, atacantes)
+e lista agrupada por posição. Dá para trocar para “Por clube”.
 
 <p align="center">
-  <img src="docs/assets/demo-busca-elenco.png" alt="Busca no elenco ao editar Arrascaeta" width="920">
+  <img src="docs/assets/demo-catalogo-atletas.png" alt="Catálogo agrupado por posição, com chips de setor e contagem" width="920">
 </p>
 
-### Cadastro e edição de jogador
+### 4. Busca no formulário
+
+Ao escalar ou editar, a busca preenche nome, clube, posição, função, camisa e gols.
+
+<p align="center">
+  <img src="docs/assets/demo-busca-elenco.png" alt="Formulário de edição com busca no elenco da Série A" width="920">
+</p>
+
+### 5. Cadastro de jogador
 
 CRUD pelo site: clube, posição na formação, função tática, gols, assistências e capitão.
 
 <p align="center">
-  <img src="docs/assets/demo-formulario-jogador.png" alt="Formulário para escalar um jogador" width="920">
+  <img src="docs/assets/demo-formulario-jogador.png" alt="Formulário para escalar um jogador na formação" width="920">
 </p>
 
 ---
