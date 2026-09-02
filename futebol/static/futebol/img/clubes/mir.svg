@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 72" width="64" height="72" role="img">
+  <defs>
+    <linearGradient id="brilho" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity=".28"/>
+      <stop offset="55%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <clipPath id="escudo">
+      <path d="M32 2 60 12v28c0 16-12 25-28 30C16 65 4 56 4 40V12Z"/>
+    </clipPath>
+  </defs>
+  <g clip-path="url(#escudo)">
+    <rect width="64" height="72" fill="#ca8a04"/>
+    <path d="M-8 44 32 4l12 12-40 40Z" fill="#15803d" opacity=".92"/>
+    <rect width="64" height="72" fill="url(#brilho)"/>
+  </g>
+  <path d="M32 2 60 12v28c0 16-12 25-28 30C16 65 4 56 4 40V12Z"
+        fill="none" stroke="#ffffff" stroke-opacity=".85" stroke-width="2.5"/>
+  <text x="32" y="42" text-anchor="middle" fill="#ffffff"
+        font-family="Verdana,Geneva,sans-serif" font-size="17" font-weight="bold">MIR</text>
+</svg>

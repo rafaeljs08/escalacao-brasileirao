@@ -1,0 +1,26 @@
+{% for erro in form.non_field_errors %}
+<div class="mensagem error">{{ erro }}</div>
+{% endfor %}
+
+<div class="form-grid">
+    {% for field in form %}
+    <div class="campo-form{% if field.field.widget.input_type == 'url' or field.name == 'nome' %} campo-form--largo{% endif %}">
+        {% if field.field.widget.input_type == 'checkbox' %}
+        <div class="check-linha">
+            {{ field }}
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        </div>
+        {% else %}
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% endif %}
+
+        {% if field.help_text %}
+        <span class="campo-form__ajuda">{{ field.help_text }}</span>
+        {% endif %}
+        {% for erro in field.errors %}
+        <span class="campo-form__erro">{{ erro }}</span>
+        {% endfor %}
+    </div>
+    {% endfor %}
+</div>

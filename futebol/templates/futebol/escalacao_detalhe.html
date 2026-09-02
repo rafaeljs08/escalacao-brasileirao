@@ -1,0 +1,199 @@
+{% extends 'futebol/base.html' %}
+{% load static %}
+
+{% block titulo %}{{ escalacao.nome }}{% endblock %}
+
+{% block conteudo %}
+<div class="page-head">
+    <div>
+        <span class="eyebrow">Escalação · {{ escalacao.formacao }}</span>
+        <h1>{{ escalacao.nome }}</h1>
+        <p class="page-head__sub">
+            {% if escalacao.torcedor %}Montado por {{ escalacao.torcedor }} · {% endif %}
+            {{ escalacao.total_escalado }} de {{ escalacao.total_vagas }} posições preenchidas
+            {% if clubes_representados %} · {{ clubes_representados }} clube{{ clubes_representados|pluralize }} representado{{ clubes_representados|pluralize }}{% endif %}
+        </p>
+    </div>
+    <div class="form-acoes" style="margin: 0">
+        <a href="{% url 'futebol_jogador_criar' escalacao.pk %}" class="btn btn--primario">+ Escalar jogador</a>
+        <a href="{% url 'futebol_time_editar' escalacao.pk %}" class="btn btn--secundario">Editar time</a>
+    </div>
+</div>
+
+<div class="campo-layout">
+    <div class="campo-coluna">
+        <div class="campo">
+            <div class="campo__brilho"></div>
+
+            <svg class="campo__linhas" viewBox="0 0 320 400" fill="none"
+                 stroke="rgba(255,255,255,.78)" stroke-width="2" aria-hidden="true">
+                <rect x="10" y="10" width="300" height="380" rx="3"/>
+                <line x1="10" y1="200" x2="310" y2="200"/>
+                <circle cx="160" cy="200" r="40"/>
+                <circle cx="160" cy="200" r="3" fill="rgba(255,255,255,.78)" stroke="none"/>
+
+                <rect x="80" y="10" width="160" height="56"/>
+                <rect x="122" y="10" width="76" height="22"/>
+                <circle cx="160" cy="48" r="2.5" fill="rgba(255,255,255,.78)" stroke="none"/>
+                <path d="M124.3 66a40 40 0 0 0 71.4 0"/>
+
+                <rect x="80" y="334" width="160" height="56"/>
+                <rect x="122" y="368" width="76" height="22"/>
+                <circle cx="160" cy="352" r="2.5" fill="rgba(255,255,255,.78)" stroke="none"/>
+                <path d="M124.3 334a40 40 0 0 1 71.4 0"/>
+
+                <path d="M10 22a12 12 0 0 0 12-12"/>
+                <path d="M310 22a12 12 0 0 1-12-12"/>
+                <path d="M10 378a12 12 0 0 1 12 12"/>
+                <path d="M310 378a12 12 0 0 0-12 12"/>
+            </svg>
+
+            <span class="campo__tag campo__tag--formacao">{{ escalacao.formacao }}</span>
+            <span class="campo__tag campo__tag--placar">{{ total_gols }} G · {{ total_assistencias }} A</span>
+
+            <div class="campo__formacao">
+                {% for linha in linhas %}
+                <div class="campo__linha campo__linha--{{ linha.chave }}">
+                    {% for slot in linha.slots %}
+                    {% if slot.jogador %}
+                    <a class="atleta"
+                       href="{% url 'futebol_jogador_editar' escalacao.pk slot.jogador.pk %}"
+                       title="{{ slot.jogador.nome }} — {{ slot.jogador.clube.nome }}">
+                        <span class="atleta__avatar"
+                              {% if slot.jogador.foto %}style="background-image: url('{{ slot.jogador.foto }}')"{% endif %}>
+                            <span class="atleta__numero">{{ slot.jogador.numero }}</span>
+                            {% if slot.jogador.capitao %}<span class="atleta__capitao">C</span>{% endif %}
+                            <img class="atleta__escudo"
+                                 src="{% static slot.jogador.clube.escudo %}"
+                                 alt="{{ slot.jogador.clube.nome }}">
+                        </span>
+                        <span class="atleta__faixa">
+                            <span class="atleta__nome">{{ slot.jogador.nome }}</span>
+                            <span class="atleta__pontos">{{ slot.jogador.participacoes }} G+A</span>
+                        </span>
+                    </a>
+                    {% else %}
+                    <a class="atleta atleta--vaga"
+                       href="{% url 'futebol_jogador_criar' escalacao.pk %}?posicao={{ slot.posicao }}"
+                       title="Escalar {{ slot.label|lower }}">
+                        <span class="atleta__avatar">+</span>
+                        <span class="atleta__faixa">
+                            <span class="atleta__nome">{{ slot.posicao }}</span>
+                        </span>
+                    </a>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <span class="stat__valor">{{ escalacao.total_escalado }}</span>
+                <span class="stat__rotulo">Escalados</span>
+            </div>
+            <div class="stat">
+                <span class="stat__valor">{{ total_gols }}</span>
+                <span class="stat__rotulo">Gols</span>
+            </div>
+            <div class="stat">
+                <span class="stat__valor">{{ total_assistencias }}</span>
+                <span class="stat__rotulo">Assistências</span>
+            </div>
+            <div class="stat">
+                <span class="stat__valor">{{ clubes_representados }}</span>
+                <span class="stat__rotulo">Clubes</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="painel-coluna">
+        <section class="card">
+            <div class="card__titulo">
+                <h2>Elenco</h2>
+                <span class="pill pill--verde">{{ jogadores|length }}</span>
+            </div>
+
+            {% if jogadores %}
+            <div class="elenco">
+                {% for jogador in jogadores %}
+                <div class="elenco-item">
+                    <img class="elenco-item__escudo"
+                         src="{% static jogador.clube.escudo %}"
+                         alt="{{ jogador.clube.nome }}">
+                    <div>
+                        <div class="elenco-item__nome">
+                            {{ jogador.nome }}
+                            {% if jogador.capitao %}<span title="Capitão">🅲</span>{% endif %}
+                        </div>
+                        <div class="elenco-item__sub">
+                            <span class="badge-pos badge-pos--{{ jogador.posicao|lower }}">{{ jogador.posicao }}</span>
+                            #{{ jogador.numero }} · {{ jogador.clube.nome }} ·
+                            {{ jogador.gols }}G {{ jogador.assistencias }}A · {{ jogador.posse_bola }}%
+                        </div>
+                    </div>
+                    <div class="elenco-item__acoes">
+                        <a class="acao-icone"
+                           href="{% url 'futebol_noticia_criar' escalacao.pk jogador.pk %}"
+                           title="Adicionar notícia">📰</a>
+                        <a class="acao-icone"
+                           href="{% url 'futebol_jogador_editar' escalacao.pk jogador.pk %}"
+                           title="Editar">✎</a>
+                        <a class="acao-icone acao-icone--perigo"
+                           href="{% url 'futebol_jogador_excluir' escalacao.pk jogador.pk %}"
+                           title="Remover">✕</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="campo-form__ajuda">
+                Nenhum jogador escalado. Clique em uma vaga no campo para começar.
+            </p>
+            {% endif %}
+
+            {% if reservas %}
+            <p class="campo-form__ajuda" style="margin-top: 1rem">
+                {{ reservas|length }} jogador{{ reservas|length|pluralize:"es" }} além das vagas da
+                formação {{ escalacao.formacao }} ficam no banco.
+            </p>
+            {% endif %}
+        </section>
+
+        <section class="card">
+            <div class="card__titulo"><h2>Notícias do elenco</h2></div>
+            {% if jogadores %}
+            <ul class="noticias-lista">
+                {% for jogador in jogadores %}
+                {% for noticia in jogador.noticias.all %}
+                <li class="noticia">
+                    <div>
+                        <span class="noticia__autor">
+                            <img src="{% static jogador.clube.escudo %}" alt="" width="14" height="16">
+                            {{ jogador.nome }}
+                        </span>
+                        <h4>{{ noticia.titulo }}</h4>
+                        <p>{{ noticia.resumo }}</p>
+                        <time>{{ noticia.data_publicacao|date:"d/m/Y" }}</time>
+                    </div>
+                    <a class="acao-icone acao-icone--perigo"
+                       href="{% url 'futebol_noticia_excluir' escalacao.pk jogador.pk noticia.pk %}"
+                       title="Remover notícia">✕</a>
+                </li>
+                {% endfor %}
+                {% empty %}
+                <li class="campo-form__ajuda">Sem notícias publicadas.</li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="campo-form__ajuda">Escale jogadores para publicar notícias.</p>
+            {% endif %}
+        </section>
+
+        <a href="{% url 'futebol_time_excluir' escalacao.pk %}" class="btn btn--perigo btn--bloco">
+            Excluir este time
+        </a>
+    </div>
+</div>
+{% endblock %}

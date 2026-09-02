@@ -1,0 +1,25 @@
+{% extends 'futebol/base.html' %}
+
+{% block titulo %}Nova notícia{% endblock %}
+
+{% block conteudo %}
+<div class="form-wrap">
+    <div class="page-head">
+        <div>
+            <span class="eyebrow">{{ jogador.nome }} · {{ jogador.clube.nome }}</span>
+            <h1>Publicar notícia</h1>
+            <p class="page-head__sub">A notícia aparece no painel lateral da escalação.</p>
+        </div>
+    </div>
+
+    <form method="post" class="card" novalidate>
+        {% csrf_token %}
+        {% include 'futebol/_campo_form.html' %}
+
+        <div class="form-acoes">
+            <button type="submit" class="btn btn--primario">Publicar</button>
+            <a href="{{ escalacao.get_absolute_url }}" class="btn btn--secundario">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

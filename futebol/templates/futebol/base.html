@@ -1,0 +1,48 @@
+{% load static %}<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block titulo %}Escalação{% endblock %} | Escalação Brasileirão</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="{% static 'futebol/css/app.css' %}">
+    <link rel="stylesheet" href="{% static 'futebol/css/campo.css' %}">
+    {% block estilos %}{% endblock %}
+</head>
+<body class="app">
+    <header class="topbar">
+        <div class="container topbar__inner">
+            <a href="{% url 'futebol' %}" class="marca">
+                <span class="marca__icone">⚽</span>
+                Escalação Brasileirão
+            </a>
+            <nav class="topbar__links">
+                <a href="{% url 'futebol' %}" class="topbar__link">Meus times</a>
+                <a href="{% url 'futebol_time_criar' %}" class="topbar__link">Novo time</a>
+                <a href="{% url 'admin:index' %}" class="topbar__link">Admin</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        {% if messages %}
+        <div class="mensagens">
+            {% for message in messages %}
+            <div class="mensagem {{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% block conteudo %}{% endblock %}
+
+        <footer class="rodape">
+            Monte sua escalação com jogadores de qualquer clube da Série A ·
+            <strong>Programação Backend</strong> · Python/Django
+        </footer>
+    </main>
+</body>
+</html>

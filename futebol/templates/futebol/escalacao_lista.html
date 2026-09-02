@@ -1,0 +1,65 @@
+{% extends 'futebol/base.html' %}
+{% load static %}
+
+{% block titulo %}Meus times{% endblock %}
+
+{% block conteudo %}
+<div class="page-head">
+    <div>
+        <span class="eyebrow">Campeonato Brasileiro · Série A</span>
+        <h1>Monte a sua escalação</h1>
+        <p class="page-head__sub">
+            Escolha a formação, escale jogadores de qualquer um dos {{ total_clubes }} clubes da Série A
+            e acompanhe gols, assistências, posse de bola e notícias de cada atleta.
+        </p>
+    </div>
+    <a href="{% url 'futebol_time_criar' %}" class="btn btn--primario">+ Criar novo time</a>
+</div>
+
+{% if escalacoes %}
+<div class="grade-times">
+    {% for time in escalacoes %}
+    <a href="{{ time.get_absolute_url }}" class="time-card">
+        <div class="time-card__topo">
+            <div>
+                <h3>{{ time.nome }}</h3>
+                <p class="time-card__meta">
+                    {% if time.torcedor %}{{ time.torcedor }} · {% endif %}
+                    atualizado em {{ time.atualizado_em|date:"d/m/Y" }}
+                </p>
+            </div>
+            <span class="pill">{{ time.formacao }}</span>
+        </div>
+
+        <div class="escudos-empilhados">
+            {% for jogador in time.jogadores.all|slice:":6" %}
+            <img src="{% static jogador.clube.escudo %}" alt="{{ jogador.clube.nome }}">
+            {% empty %}
+            <span class="time-card__meta">Nenhum jogador escalado ainda</span>
+            {% endfor %}
+        </div>
+
+        <div>
+            <div class="progresso">
+                <div class="progresso__barra" style="width: {{ time.progresso }}%"></div>
+            </div>
+            <div class="progresso-legenda">
+                <span>{{ time.total_escalado }} de {{ time.total_vagas }} posições</span>
+                <span>{{ time.progresso }}%</span>
+            </div>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<div class="vazio">
+    <div class="vazio__icone">🏟️</div>
+    <h3>Nenhum time criado ainda</h3>
+    <p>
+        Crie o seu primeiro time, escolha a formação e escale jogadores de qualquer
+        clube do Campeonato Brasileiro.
+    </p>
+    <a href="{% url 'futebol_time_criar' %}" class="btn btn--primario">Criar meu primeiro time</a>
+</div>
+{% endif %}
+{% endblock %}
