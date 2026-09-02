@@ -1,0 +1,12 @@
+<li>
+    <span class="badge-pos badge-pos--{{ atleta.badge_posicao }}">{{ atleta.funcao|default:atleta.posicao }}</span>
+    <img src="{{ atleta.foto_publica }}" alt="" width="32" height="32" class="catalogo-foto">
+    <span class="elenco-item__nome">{{ atleta.nome }}</span>
+    <span class="elenco-item__sub">
+        {{ atleta.clube.nome }}
+        · {{ atleta.funcao_rotulo }}
+        {% if atleta.numero %} · #{{ atleta.numero }}{% endif %}
+        · {{ atleta.gols }} gol{{ atleta.gols|pluralize:"s" }}
+        · {{ atleta.get_fonte_display }}
+    </span>
+</li>

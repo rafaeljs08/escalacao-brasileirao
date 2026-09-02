@@ -700,10 +700,197 @@ a { color: inherit; }
 
 .filtros {
     display: grid;
-    grid-template-columns: 1.2fr 1fr 0.8fr 1.2fr auto;
+    grid-template-columns: 1.4fr 1fr auto;
     gap: 0.9rem;
     align-items: end;
-    margin-bottom: 1.2rem;
+    margin-bottom: 1rem;
+}
+
+.filtro-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin: 0 0 0.75rem;
+}
+
+.filtro-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.42rem 0.78rem;
+    border: 1px solid var(--borda);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--texto-suave);
+    font-size: 0.82rem;
+    font-weight: 650;
+    text-decoration: none;
+    transition: border-color 0.16s, background 0.16s, color 0.16s;
+}
+
+.filtro-chip span {
+    color: var(--texto-fraco);
+    font-size: 0.72rem;
+    font-weight: 600;
+}
+
+.filtro-chip:hover {
+    border-color: var(--borda-forte);
+    color: var(--texto);
+}
+
+.filtro-chip.is-ativo {
+    border-color: rgba(34, 197, 94, 0.55);
+    background: rgba(34, 197, 94, 0.14);
+    color: #bbf7d0;
+}
+
+.filtro-chip.is-ativo span { color: #86efac; }
+
+.filtro-chip--gol.is-ativo {
+    border-color: rgba(252, 211, 77, 0.5);
+    background: rgba(245, 184, 65, 0.16);
+    color: #fde68a;
+}
+.filtro-chip--zag.is-ativo {
+    border-color: rgba(147, 197, 253, 0.5);
+    background: rgba(59, 130, 246, 0.16);
+    color: #bfdbfe;
+}
+.filtro-chip--lat.is-ativo {
+    border-color: rgba(196, 181, 253, 0.5);
+    background: rgba(139, 92, 246, 0.16);
+    color: #ddd6fe;
+}
+.filtro-chip--mei.is-ativo {
+    border-color: rgba(34, 197, 94, 0.55);
+    background: rgba(34, 197, 94, 0.14);
+    color: #bbf7d0;
+}
+.filtro-chip--ata.is-ativo {
+    border-color: rgba(253, 164, 175, 0.5);
+    background: rgba(244, 63, 94, 0.14);
+    color: #fecdd3;
+}
+
+.filtro-chips--funcoes .filtro-chip {
+    padding: 0.32rem 0.68rem;
+    font-size: 0.78rem;
+}
+
+.catalogo-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.7rem 1rem;
+    margin: 0.2rem 0 1rem;
+}
+
+.agrupar {
+    display: inline-flex;
+    padding: 0.2rem;
+    border: 1px solid var(--borda);
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.28);
+}
+
+.agrupar a {
+    padding: 0.32rem 0.75rem;
+    border-radius: 999px;
+    color: var(--texto-fraco);
+    font-size: 0.78rem;
+    font-weight: 650;
+    text-decoration: none;
+}
+
+.agrupar a.is-ativo {
+    background: rgba(34, 197, 94, 0.16);
+    color: #bbf7d0;
+}
+
+.catalogo-setor { margin-bottom: 1rem; }
+
+.catalogo-setor__topo {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 0.7rem;
+}
+
+.catalogo-setor__topo > div { flex: 1; }
+
+.catalogo-setor__topo h2 { font-size: 1.08rem; }
+
+.catalogo-setor__marca {
+    width: 5px;
+    height: 2rem;
+    border-radius: 99px;
+    background: var(--verde);
+}
+
+.catalogo-setor--gol .catalogo-setor__marca { background: #fcd34d; }
+.catalogo-setor--zag .catalogo-setor__marca { background: #60a5fa; }
+.catalogo-setor--lat .catalogo-setor__marca { background: #a78bfa; }
+.catalogo-setor--mei .catalogo-setor__marca { background: #4ade80; }
+.catalogo-setor--ata .catalogo-setor__marca { background: #fb7185; }
+
+.catalogo-funcao {
+    margin: 0.85rem 0 0.35rem;
+    color: var(--texto-suave);
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+}
+
+.catalogo-funcao--setor {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.catalogo-foto {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    object-fit: cover;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.elenco-setor + .elenco-setor { margin-top: 0.95rem; }
+
+.elenco-setor__titulo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 0.55rem;
+    color: var(--texto-suave);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.elenco-setor__qtd {
+    margin-left: auto;
+    color: var(--texto-fraco);
+    font-family: var(--fonte-texto);
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.catalogo-grupo {
+    margin: 0;
+    padding: 0.45rem 0.9rem 0.3rem;
+    border-bottom: 1px solid var(--borda);
+    color: var(--texto-fraco);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: rgba(255, 255, 255, 0.03);
 }
 
 .filtros__acoes {

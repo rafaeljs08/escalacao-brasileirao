@@ -9,15 +9,17 @@
         <span class="eyebrow">Catálogo · Brasileirão Série A</span>
         <h1>Jogadores para escalar</h1>
         <p class="page-head__sub">
-            Elenco de referência dos 20 clubes. Sem chave da API Futebol o app usa
-            o catálogo local; com <code>API_FUTEBOL_KEY</code>, a artilharia oficial
-            entra no mesmo cadastro.
+            Elenco separado por posição — goleiros, zagueiros, laterais, meias e atacantes —
+            com função tática (CA, MAT, LD…). Sem chave da API o app usa o catálogo local.
         </p>
     </div>
     <a href="{% url 'futebol' %}" class="btn btn--secundario">Voltar aos times</a>
 </div>
 
 <form method="get" class="filtros card" role="search">
+    <input type="hidden" name="posicao" value="{{ posicao_atual }}">
+    <input type="hidden" name="funcao" value="{{ funcao_atual }}">
+    <input type="hidden" name="agrupar" value="{{ agrupar }}">
     <div class="campo-form">
         <label for="id_q">Nome</label>
         <input type="search" id="id_q" name="q" value="{{ busca }}" placeholder="Buscar jogador">
@@ -33,59 +35,107 @@
             {% endfor %}
         </select>
     </div>
-    <div class="campo-form">
-        <label for="id_posicao">Setor</label>
-        <select id="id_posicao" name="posicao">
-            <option value="">Todos os setores</option>
-            {% for sigla, label in posicoes %}
-            <option value="{{ sigla }}"{% if posicao_atual == sigla %} selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-        </select>
-    </div>
-    <div class="campo-form">
-        <label for="id_funcao">Função tática</label>
-        <select id="id_funcao" name="funcao">
-            <option value="">Todas as funções</option>
-            {% for sigla, label in funcoes %}
-            <option value="{{ sigla }}"{% if funcao_atual == sigla %} selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-        </select>
-    </div>
     <div class="filtros__acoes">
         <button type="submit" class="btn btn--primario">Filtrar</button>
         <a href="{% url 'futebol_atletas' %}" class="btn btn--secundario">Limpar</a>
     </div>
 </form>
 
-<p class="catalogo-resumo">{{ total }} atleta{{ total|pluralize:"s" }} encontrado{{ total|pluralize:"s" }}.</p>
+<nav class="filtro-chips" aria-label="Filtrar por posição">
+    <a class="filtro-chip{% if not posicao_atual %} is-ativo{% endif %}"
+       href="{% url 'futebol_atletas' %}{% if url_todos %}?{{ url_todos }}{% endif %}">
+        Todos <span>{{ total_base }}</span>
+    </a>
+    {% for chip in chips_posicao %}
+    <a class="filtro-chip filtro-chip--{{ chip.classe }}{% if posicao_atual == chip.sigla %} is-ativo{% endif %}"
+       href="{% url 'futebol_atletas' %}?{{ chip.url }}"
+       {% if posicao_atual == chip.sigla %}aria-current="true"{% endif %}>
+        {{ chip.rotulo }} <span>{{ chip.total }}</span>
+    </a>
+    {% endfor %}
+</nav>
 
-{% if agrupados %}
-{% for grupo in agrupados %}
+{% if chips_funcao %}
+<nav class="filtro-chips filtro-chips--funcoes" aria-label="Filtrar por função tática">
+    <a class="filtro-chip{% if not funcao_atual %} is-ativo{% endif %}"
+       href="{% url 'futebol_atletas' %}{% if url_todas_funcoes %}?{{ url_todas_funcoes }}{% endif %}">
+        Todas as funções
+    </a>
+    {% for chip in chips_funcao %}
+    <a class="filtro-chip filtro-chip--{{ chip.classe }}{% if funcao_atual == chip.sigla %} is-ativo{% endif %}"
+       href="{% url 'futebol_atletas' %}?{{ chip.url }}"
+       {% if funcao_atual == chip.sigla %}aria-current="true"{% endif %}>
+        {{ chip.rotulo }} <span>{{ chip.total }}</span>
+    </a>
+    {% endfor %}
+</nav>
+{% endif %}
+
+<div class="catalogo-toolbar">
+    <p class="catalogo-resumo">
+        {{ total }} atleta{{ total|pluralize:"s" }}
+        {% if posicao_atual %} · {{ posicao_atual }}{% endif %}
+        {% if funcao_atual %} · {{ funcao_atual }}{% endif %}
+        {% if clube_atual %} · {{ clube_atual.nome }}{% endif %}
+    </p>
+    <div class="agrupar" role="group" aria-label="Agrupar lista">
+        <a class="{% if agrupar == 'posicao' %}is-ativo{% endif %}"
+           href="{% url 'futebol_atletas' %}?{{ url_agrupar_posicao }}"
+           {% if agrupar == 'posicao' %}aria-current="true"{% endif %}>Por posição</a>
+        <a class="{% if agrupar == 'clube' %}is-ativo{% endif %}"
+           href="{% url 'futebol_atletas' %}?{{ url_agrupar_clube }}"
+           {% if agrupar == 'clube' %}aria-current="true"{% endif %}>Por clube</a>
+    </div>
+</div>
+
+{% if setores or clubes_grupos %}
+
+{% for setor in setores %}
+<section class="catalogo-setor catalogo-setor--{{ setor.classe }} card" id="setor-{{ setor.classe }}">
+    <header class="catalogo-setor__topo">
+        <span class="catalogo-setor__marca" aria-hidden="true"></span>
+        <div>
+            <h2>{{ setor.rotulo }}</h2>
+            <p class="elenco-item__sub">{{ setor.rotulo_um }} · {{ setor.total }} jogador{{ setor.total|pluralize:"es" }}</p>
+        </div>
+        <span class="badge-pos badge-pos--{{ setor.classe }}">{{ setor.sigla }}</span>
+    </header>
+    {% for funcao in setor.funcoes %}
+    {% if setor.funcoes|length > 1 %}
+    <h3 class="catalogo-funcao">{{ funcao.rotulo }}</h3>
+    {% endif %}
+    <ul class="catalogo-elenco">
+        {% for atleta in funcao.atletas %}
+        {% include 'futebol/_atleta_linha.html' %}
+        {% endfor %}
+    </ul>
+    {% endfor %}
+</section>
+{% endfor %}
+
+{% for grupo in clubes_grupos %}
 <section class="catalogo-clube card">
     <header class="catalogo-clube__topo">
         <img src="{{ grupo.clube.escudo_publico }}" alt="{{ grupo.clube.sigla }}" class="elenco-item__escudo">
         <div>
             <h2>{{ grupo.clube.nome }}</h2>
-            <p class="elenco-item__sub">{{ grupo.clube.sigla }} · {{ grupo.atletas|length }} jogador{{ grupo.atletas|length|pluralize:"es" }}</p>
+            <p class="elenco-item__sub">{{ grupo.clube.sigla }} · {{ grupo.total }} jogador{{ grupo.total|pluralize:"es" }}</p>
         </div>
     </header>
+    {% for setor in grupo.setores %}
+    <h3 class="catalogo-funcao catalogo-funcao--setor">
+        <span class="badge-pos badge-pos--{{ setor.classe }}">{{ setor.sigla }}</span>
+        {{ setor.rotulo }}
+    </h3>
     <ul class="catalogo-elenco">
-        {% for atleta in grupo.atletas %}
-        <li>
-            <span class="badge-pos badge-pos--{{ atleta.badge_posicao }}">{{ atleta.funcao|default:atleta.posicao }}</span>
-            <img src="{{ atleta.foto_publica }}" alt="" width="32" height="32" style="border-radius:8px; object-fit:cover">
-            <span class="elenco-item__nome">{{ atleta.nome }}</span>
-            <span class="elenco-item__sub">
-                {{ atleta.funcao_rotulo }}
-                {% if atleta.numero %} · #{{ atleta.numero }}{% endif %}
-                · {{ atleta.gols }} gol{{ atleta.gols|pluralize:"s" }}
-                · {{ atleta.get_fonte_display }}
-            </span>
-        </li>
+        {% for atleta in setor.atletas %}
+        {% include 'futebol/_atleta_linha.html' %}
         {% endfor %}
     </ul>
+    {% endfor %}
 </section>
 {% endfor %}
+
 {% elif busca or clube_atual or posicao_atual or funcao_atual %}
 <div class="vazio">
     <div class="vazio__icone">🔎</div>

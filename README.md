@@ -42,7 +42,7 @@ Projeto desenvolvido para a disciplina **Programação Backend (Python/Django)**
 | **Times** | Crie quantos times quiser, cada um com nome, torcedor e formação |
 | **7 formações** | `3-4-3`, `3-5-2`, `4-3-3`, `4-4-2`, `4-5-1`, `5-3-2` e `5-4-1` |
 | **Clubes da Série A** | Escudo, sigla e cores; seed com 20 clubes, sync com o elenco da temporada |
-| **Catálogo de jogadores** | Lista em `/atletas/` com filtro por nome, clube, setor e função tática |
+| **Catálogo de jogadores** | Lista em `/atletas/` agrupada por posição, com chips de setor/função e filtro por nome e clube |
 | **Busca ao escalar** | Digite o nome no formulário e os campos (clube, posição, função, camisa, gols) preencham sozinhos |
 | **API Futebol** | Com `API_FUTEBOL_KEY`, sincroniza a artilharia oficial (`campeonato_id = 10`) |
 | **Campo interativo** | Vagas livres são clicáveis e já abrem o formulário na posição certa |
@@ -87,8 +87,8 @@ Escalação 4-3-3 no gramado, com jogadores de clubes diferentes, estatísticas 
 
 ### Catálogo da Série A
 
-Página **Jogadores**: elenco com filtro por nome, clube, setor e função tática
-(CA, MAT, LD, LE…). Aqui, o recorte do Flamengo.
+Página **Jogadores**: elenco separado por posição (goleiros, zaga, laterais, meias,
+atacantes) e função tática (CA, MAT, LD…), com filtro por chips.
 
 <p align="center">
   <img src="docs/assets/demo-catalogo-atletas.png" alt="Catálogo de atletas filtrado pelo Flamengo" width="920">
@@ -190,9 +190,11 @@ Acesse **http://127.0.0.1:8000/**
 
 ## 📦 Como o catálogo funciona
 
-O menu **Jogadores** lista o elenco de referência. Sem chave da API o app já funciona:
-`seed_brasileirao` grava o catálogo local dos 20 clubes (fonte `local`). O sync do
-Cartola amplia esse elenco e preenche a função tática quando ela é conhecida.
+O menu **Jogadores** lista o elenco de referência, separado por posição. Sem chave
+da API o app já funciona: `seed_brasileirao` grava o catálogo local dos 20 clubes
+(fonte `local`). O sync do Cartola amplia esse elenco e preenche a função tática
+quando ela é conhecida. Os chips de setor e função são links GET — funcionam
+sem JavaScript.
 
 No formulário de escalação, a busca consulta `/atletas.json` e preenche o cadastro.
 A posição escolhida ainda precisa ter vaga livre na formação do time.
@@ -212,7 +214,7 @@ A posição escolhida ainda precisa ter vaga livre na formação do time.
 | `/time/<id>/jogador/<id>/editar/` | `GET` / `POST` | Edita um jogador |
 | `/time/<id>/jogador/<id>/excluir/` | `GET` / `POST` | Remove um jogador |
 | `/time/<id>/jogador/<id>/noticia/nova/` | `GET` / `POST` | Publica uma notícia |
-| `/atletas/` | `GET` | Catálogo de jogadores da Série A, com filtro por clube e posição |
+| `/atletas/` | `GET` | Catálogo agrupado por posição; filtros `q`, `clube`, `posicao`, `funcao`, `agrupar` |
 | `/atletas.json` | `GET` | JSON usado pela busca no formulário de escalação |
 | `/painel/assets/` | `GET` / `POST` | Painel do Asset Manager (totais, sync, validação) |
 | `/assets/teams/<arquivo>` | `GET` | Escudo local |

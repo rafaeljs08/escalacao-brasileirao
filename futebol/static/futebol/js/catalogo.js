@@ -42,6 +42,8 @@
         }
     }
 
+    const ORDEM_SETOR = ["GOL", "ZAG", "LAT", "MEI", "ATA"];
+
     function render(items) {
         atletas = items;
         if (!items.length) {
@@ -49,21 +51,58 @@
             lista.innerHTML = '<p class="campo-form__ajuda">Nenhum atleta encontrado neste filtro.</p>';
             return;
         }
+        const grupos = {};
+        items.forEach(function (a) {
+            const chave = a.posicao || "MEI";
+            (grupos[chave] = grupos[chave] || []).push(a);
+        });
+        let html = "";
+        ORDEM_SETOR.forEach(function (sigla) {
+            const bloco = grupos[sigla];
+            if (!bloco) return;
+            const rotulo = bloco[0].posicao_label || sigla;
+            html += '<p class="catalogo-grupo">' + rotulo + " · " + bloco.length + "</p>";
+            html += bloco.map(function (a) {
+                const funcao = a.funcao_label || a.posicao_label || a.posicao;
+                return (
+                    '<button type="button" class="catalogo-item" data-id="' + a.id + '">' +
+                    '<span class="catalogo-item__nome">' + a.nome + "</span>" +
+                    '<span class="catalogo-item__meta">' + a.clube + " · " + funcao + " · " + a.gols + " gols</span>" +
+                    "</button>"
+                );
+            }).join("");
+        });
         lista.hidden = false;
-        lista.innerHTML = items.map(function (a) {
-            const funcao = a.funcao_label || a.posicao_label || a.posicao;
-            return (
-                '<button type="button" class="catalogo-item" data-id="' + a.id + '">' +
-                '<span class="catalogo-item__nome">' + a.nome + "</span>" +
-                '<span class="catalogo-item__meta">' + a.clube + " · " + funcao + " · " + a.gols + " gols</span>" +
-                "</button>"
-            );
-        }).join("");
+        lista.innerHTML = html;
         lista.querySelectorAll(".catalogo-item").forEach(function (btn) {
             btn.addEventListener("click", function () {
                 const atleta = atletas.find(function (x) { return String(x.id) === btn.getAttribute("data-id"); });
                 if (atleta) preencher(atleta);
             });
+        });
+    }
+
+    function sincronizarFuncoes() {
+        if (!filtroFuncao || !filtroPosicao) return;
+        const mapa = {
+            GOL: [["GOL", "Goleiro"]],
+            ZAG: [["ZAG", "Zagueiro"]],
+            LAT: [["LD", "Lateral direito"], ["LE", "Lateral esquerdo"], ["LAT", "Lateral"]],
+            MEI: [["VOL", "Volante"], ["MC", "Meia central"], ["MAT", "Meia-atacante"], ["MD", "Meia direita"], ["ME", "Meia esquerda"], ["MEI", "Meia"]],
+            ATA: [["PD", "Ponta direita"], ["PE", "Ponta esquerda"], ["SA", "Segundo atacante"], ["CA", "Centroavante"], ["ATA", "Atacante"]],
+        };
+        const setor = filtroPosicao.value;
+        const atual = filtroFuncao.value;
+        const opcoes = setor ? (mapa[setor] || []) : Object.keys(mapa).reduce(function (acc, k) {
+            return acc.concat(mapa[k]);
+        }, []);
+        filtroFuncao.innerHTML = '<option value="">Todas</option>';
+        opcoes.forEach(function (par) {
+            const opt = document.createElement("option");
+            opt.value = par[0];
+            opt.textContent = par[1];
+            if (par[0] === atual) opt.selected = true;
+            filtroFuncao.appendChild(opt);
         });
     }
 
@@ -96,7 +135,15 @@
         timer = setTimeout(consultar, 180);
     });
     busca.addEventListener("focus", consultar);
-    [filtroClube, filtroPosicao, filtroFuncao].forEach(function (el) {
+    [filtroClube, filtroFuncao].forEach(function (el) {
         if (el) el.addEventListener("change", consultar);
     });
+    if (filtroPosicao) {
+        filtroPosicao.addEventListener("change", function () {
+            if (filtroFuncao) filtroFuncao.value = "";
+            sincronizarFuncoes();
+            consultar();
+        });
+        sincronizarFuncoes();
+    }
 })();

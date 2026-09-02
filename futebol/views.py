@@ -1,11 +1,21 @@
 from django.contrib import messages
-from django.db.models import Prefetch
+from django.db.models import Count, Prefetch
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import EscalacaoForm, JogadorForm, NoticiaForm
 from .models import AtletaCatalogo, Clube, Escalacao, Jogador, Noticia
-from .posicoes import FUNCAO_CHOICES, FUNCAO_LABEL, POSICAO_LABEL
+from .posicoes import (
+    FUNCAO_CHOICES,
+    FUNCAO_LABEL,
+    FUNCOES_DO_SETOR,
+    POSICAO_CHOICES,
+    POSICAO_LABEL,
+    SETOR_PLURAL,
+    agrupar_por_clube,
+    agrupar_por_setor,
+    classe_badge,
+)
 
 
 def _escalacao_completa(pk):
@@ -85,6 +95,7 @@ def escalacao_detalhe(request, pk):
         'escalacao': escalacao,
         'linhas': _linhas_campo(escalacao),
         'jogadores': jogadores,
+        'elenco_setores': agrupar_por_setor(jogadores),
         'reservas': _reservas(escalacao),
         'total_gols': sum(j.gols for j in jogadores),
         'total_assistencias': sum(j.assistencias for j in jogadores),
@@ -225,16 +236,16 @@ def noticia_excluir(request, pk, jogador_pk, noticia_pk):
     })
 
 
-def _filtrar_catalogo(request, ordenacao=('-gols', 'nome')):
+def _filtrar_catalogo(request, ordenacao=('-gols', 'nome'), sem=()):
     qs = AtletaCatalogo.objects.select_related('clube').order_by(*ordenacao)
     clube_id = request.GET.get('clube')
     if clube_id:
         qs = qs.filter(clube_id=clube_id)
     posicao = request.GET.get('posicao')
-    if posicao in POSICAO_LABEL:
+    if 'posicao' not in sem and posicao in POSICAO_LABEL:
         qs = qs.filter(posicao=posicao)
     funcao = request.GET.get('funcao')
-    if funcao in FUNCAO_LABEL:
+    if 'funcao' not in sem and funcao in FUNCAO_LABEL:
         qs = qs.filter(funcao=funcao)
     busca = (request.GET.get('q') or '').strip()
     if busca:
@@ -242,26 +253,76 @@ def _filtrar_catalogo(request, ordenacao=('-gols', 'nome')):
     return qs, busca
 
 
+def _query_catalogo(request, **overrides):
+    dados = request.GET.copy()
+    for chave, valor in overrides.items():
+        if valor in (None, ''):
+            dados.pop(chave, None)
+        else:
+            dados[chave] = str(valor)
+    return dados.urlencode()
+
+
+def _chips_posicao(request, qs_base):
+    totais = {
+        linha['posicao']: linha['n']
+        for linha in qs_base.order_by().values('posicao').annotate(n=Count('id'))
+    }
+    return [
+        {
+            'sigla': sigla,
+            'rotulo': SETOR_PLURAL[sigla],
+            'classe': sigla.lower(),
+            'total': totais.get(sigla, 0),
+            'url': _query_catalogo(request, posicao=sigla, funcao=''),
+        }
+        for sigla, _rotulo in POSICAO_CHOICES
+    ]
+
+
+def _chips_funcao(request, qs_setor, posicao):
+    permitidas = set(FUNCOES_DO_SETOR.get(posicao, ()))
+    totais: dict[str, int] = {}
+    for linha in qs_setor.order_by().values('funcao', 'posicao').annotate(n=Count('id')):
+        codigo = linha['funcao'] or linha['posicao']
+        totais[codigo] = totais.get(codigo, 0) + linha['n']
+    chips = []
+    for sigla, rotulo in FUNCAO_CHOICES:
+        if sigla not in permitidas:
+            continue
+        total = totais.get(sigla, 0)
+        if total == 0 and request.GET.get('funcao') != sigla:
+            continue
+        chips.append({
+            'sigla': sigla,
+            'rotulo': rotulo,
+            'classe': classe_badge(sigla),
+            'total': total,
+            'url': _query_catalogo(request, funcao=sigla),
+        })
+    return chips
+
+
 def atletas_catalogo(request):
-    qs, busca = _filtrar_catalogo(request, ('clube__nome', '-gols', 'nome'))
+    agrupar = request.GET.get('agrupar')
+    if agrupar not in {'clube', 'posicao'}:
+        agrupar = 'posicao'
+    qs, busca = _filtrar_catalogo(request, ('nome',))
     atletas = list(qs)
+    qs_base, _ = _filtrar_catalogo(request, sem=('posicao', 'funcao'))
+    qs_setor, _ = _filtrar_catalogo(request, sem=('funcao',))
     clube_id = request.GET.get('clube')
     posicao = request.GET.get('posicao') if request.GET.get('posicao') in POSICAO_LABEL else ''
     funcao = request.GET.get('funcao') if request.GET.get('funcao') in FUNCAO_LABEL else ''
     clubes = Clube.objects.all()
     clube_atual = clubes.filter(pk=clube_id).first() if clube_id else None
 
-    agrupados = []
-    atual = None
-    for atleta in atletas:
-        if atual is None or atual['clube'].pk != atleta.clube_id:
-            atual = {'clube': atleta.clube, 'atletas': []}
-            agrupados.append(atual)
-        atual['atletas'].append(atleta)
-
     return render(request, 'futebol/atletas_catalogo.html', {
-        'agrupados': agrupados,
+        'setores': agrupar_por_setor(atletas) if agrupar == 'posicao' else [],
+        'clubes_grupos': agrupar_por_clube(atletas) if agrupar == 'clube' else [],
+        'agrupar': agrupar,
         'total': len(atletas),
+        'total_base': qs_base.count(),
         'clubes': clubes,
         'clube_atual': clube_atual,
         'posicao_atual': posicao,
@@ -269,6 +330,12 @@ def atletas_catalogo(request):
         'busca': busca,
         'posicoes': Jogador.POSICAO_CHOICES,
         'funcoes': FUNCAO_CHOICES,
+        'chips_posicao': _chips_posicao(request, qs_base),
+        'chips_funcao': _chips_funcao(request, qs_setor, posicao) if posicao else [],
+        'url_todos': _query_catalogo(request, posicao='', funcao=''),
+        'url_todas_funcoes': _query_catalogo(request, funcao=''),
+        'url_agrupar_posicao': _query_catalogo(request, agrupar='posicao'),
+        'url_agrupar_clube': _query_catalogo(request, agrupar='clube'),
     })
 
 

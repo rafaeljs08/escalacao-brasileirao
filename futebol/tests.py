@@ -6,7 +6,7 @@ from django.test import TestCase, override_settings
 
 from futebol.catalogo import importar_artilharia, importar_escalacao
 from futebol.models import AtletaCatalogo, Clube, Escalacao, Jogador
-from futebol.posicoes import resolver_funcao
+from futebol.posicoes import agrupar_por_setor, resolver_funcao
 from futebol.services.api_futebol import (
     atletas_da_escalacao,
     mapear_posicao,
@@ -29,6 +29,22 @@ class MapeamentoApiTests(TestCase):
         self.assertEqual(resolver_funcao('Pedro', 'FLA', 'ATA'), 'CA')
         self.assertEqual(resolver_funcao('Wesley', 'FLA', 'LAT'), 'LD')
         self.assertEqual(resolver_funcao('Jogador Desconhecido', 'FLA', 'ZAG'), 'ZAG')
+
+    def test_agrupa_na_ordem_do_campo(self):
+        class Fake:
+            def __init__(self, nome, posicao, funcao=''):
+                self.nome = nome
+                self.posicao = posicao
+                self.funcao = funcao
+
+        grupos = agrupar_por_setor([
+            Fake('Pedro', 'ATA', 'CA'),
+            Fake('Rossi', 'GOL', 'GOL'),
+            Fake('Veiga', 'MEI', 'MAT'),
+        ])
+        self.assertEqual([g['sigla'] for g in grupos], ['GOL', 'MEI', 'ATA'])
+        self.assertEqual(grupos[0]['rotulo'], 'Goleiros')
+        self.assertEqual(grupos[-1]['funcoes'][0]['rotulo'], 'Centroavante')
 
     def test_siglas_dos_clubes_do_seed(self):
         self.assertEqual(mapear_sigla_clube('RBB'), 'BGT')
@@ -53,6 +69,40 @@ class CatalogoTests(TestCase):
         self.assertEqual(resposta.status_code, 200)
         self.assertContains(resposta, 'Pedro')
         self.assertContains(resposta, 'Flamengo')
+        self.assertContains(resposta, 'Goleiros')
+        self.assertContains(resposta, 'Atacantes')
+        html = resposta.content.decode()
+        self.assertLess(html.find('Goleiros'), html.find('Zagueiros'))
+        self.assertLess(html.find('Zagueiros'), html.find('Atacantes'))
+        self.assertContains(resposta, 'filtro-chip')
+        self.assertContains(resposta, 'Por posição')
+        goleiros = AtletaCatalogo.objects.filter(posicao='GOL').count()
+        self.assertGreater(goleiros, 1)
+        self.assertContains(resposta, f'Goleiros <span>{goleiros}</span>', html=False)
+
+    def test_catalogo_agrupa_por_clube_ainda_separa_posicao(self):
+        resposta = self.client.get('/atletas/', {'agrupar': 'clube'})
+        self.assertEqual(resposta.status_code, 200)
+        self.assertContains(resposta, 'Flamengo')
+        self.assertContains(resposta, 'Goleiros')
+        self.assertContains(resposta, 'Atacantes')
+
+    def test_chip_de_setor_filtra_e_mostra_funcoes(self):
+        resposta = self.client.get('/atletas/', {'posicao': 'ATA'})
+        self.assertEqual(resposta.status_code, 200)
+        self.assertContains(resposta, 'Pedro')
+        self.assertContains(resposta, 'Centroavante')
+        self.assertContains(resposta, 'setor-ata')
+        self.assertNotContains(resposta, 'Léo Jardim')
+
+    def test_elenco_do_time_vem_separado_por_posicao(self):
+        time = Escalacao.objects.get(nome='Seleção do Brasileirão')
+        resposta = self.client.get(f'/time/{time.pk}/')
+        self.assertEqual(resposta.status_code, 200)
+        self.assertContains(resposta, 'elenco-setor')
+        html = resposta.content.decode()
+        self.assertLess(html.find('Goleiros'), html.find('Zagueiros'))
+        self.assertLess(html.find('Zagueiros'), html.find('Atacantes'))
 
     def test_filtro_vazio_mostra_estado_sem_resultado(self):
         resposta = self.client.get('/atletas/', {'q': 'JogadorInexistenteXYZ'})

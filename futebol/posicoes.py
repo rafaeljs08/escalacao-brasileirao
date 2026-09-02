@@ -64,6 +64,17 @@ FUNCOES_DO_SETOR = {
     'ATA': ('PD', 'PE', 'SA', 'CA', 'ATA'),
 }
 
+SETOR_PLURAL = {
+    'GOL': 'Goleiros',
+    'ZAG': 'Zagueiros',
+    'LAT': 'Laterais',
+    'MEI': 'Meias',
+    'ATA': 'Atacantes',
+}
+
+ORDEM_SETOR = [codigo for codigo, _rotulo in POSICAO_CHOICES]
+ORDEM_FUNCAO = {codigo: indice for indice, (codigo, _rotulo) in enumerate(FUNCAO_CHOICES)}
+
 
 def chave_nome(nome: str) -> str:
     return slugify(nome or '')
@@ -76,6 +87,77 @@ def setor_da_funcao(funcao: str, fallback: str = 'MEI') -> str:
 def classe_badge(funcao_ou_posicao: str) -> str:
     setor = setor_da_funcao(funcao_ou_posicao, funcao_ou_posicao or 'mei')
     return (setor or 'mei').lower()
+
+
+def codigo_funcao(atleta) -> str:
+    return (getattr(atleta, 'funcao', None) or getattr(atleta, 'posicao', '') or 'MEI').upper()
+
+
+def ordenar_por_posicao(atletas):
+    def chave(atleta):
+        setor = atleta.posicao if atleta.posicao in ORDEM_SETOR else 'MEI'
+        return (
+            ORDEM_SETOR.index(setor),
+            ORDEM_FUNCAO.get(codigo_funcao(atleta), 99),
+            (atleta.nome or '').lower(),
+        )
+
+    return sorted(atletas, key=chave)
+
+
+def agrupar_por_funcao(atletas) -> list[dict]:
+    grupos: list[dict] = []
+    atual = None
+    for atleta in atletas:
+        codigo = codigo_funcao(atleta)
+        if atual is None or atual['codigo'] != codigo:
+            atual = {
+                'codigo': codigo,
+                'rotulo': FUNCAO_LABEL.get(codigo, codigo),
+                'classe': classe_badge(codigo),
+                'atletas': [],
+            }
+            grupos.append(atual)
+        atual['atletas'].append(atleta)
+    return grupos
+
+
+def agrupar_por_setor(atletas) -> list[dict]:
+    buckets: dict[str, list] = {codigo: [] for codigo in ORDEM_SETOR}
+    for atleta in atletas:
+        buckets.setdefault(atleta.posicao or 'MEI', []).append(atleta)
+
+    grupos = []
+    for codigo in ORDEM_SETOR:
+        lista = ordenar_por_posicao(buckets.get(codigo) or [])
+        if not lista:
+            continue
+        grupos.append({
+            'sigla': codigo,
+            'rotulo': SETOR_PLURAL[codigo],
+            'rotulo_um': POSICAO_LABEL[codigo],
+            'classe': codigo.lower(),
+            'atletas': lista,
+            'jogadores': lista,
+            'funcoes': agrupar_por_funcao(lista),
+            'total': len(lista),
+        })
+    return grupos
+
+
+def agrupar_por_clube(atletas) -> list[dict]:
+    ordenados = sorted(atletas, key=lambda a: ((a.clube.nome or '').lower(), a.pk))
+    grupos: list[dict] = []
+    atual = None
+    for atleta in ordenados:
+        if atual is None or atual['clube'].pk != atleta.clube_id:
+            atual = {'clube': atleta.clube, 'atletas': []}
+            grupos.append(atual)
+        atual['atletas'].append(atleta)
+    for grupo in grupos:
+        grupo['setores'] = agrupar_por_setor(grupo['atletas'])
+        grupo['total'] = len(grupo['atletas'])
+    return grupos
 
 
 def resolver_funcao(nome: str, sigla: str, posicao: str) -> str:

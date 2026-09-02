@@ -115,36 +115,45 @@
                 <span class="pill pill--verde">{{ jogadores|length }}</span>
             </div>
 
-            {% if jogadores %}
+            {% if elenco_setores %}
             <div class="elenco">
-                {% for jogador in jogadores %}
-                <div class="elenco-item">
-                    <img class="elenco-item__escudo"
-                         src="{{ jogador.clube.escudo_publico }}"
-                         alt="{{ jogador.clube.nome }}">
-                    <div>
-                        <div class="elenco-item__nome">
-                            {{ jogador.nome }}
-                            {% if jogador.capitao %}<span title="Capitão">🅲</span>{% endif %}
+                {% for setor in elenco_setores %}
+                <section class="elenco-setor">
+                    <h3 class="elenco-setor__titulo">
+                        <span class="badge-pos badge-pos--{{ setor.classe }}">{{ setor.sigla }}</span>
+                        {{ setor.rotulo }}
+                        <span class="elenco-setor__qtd">{{ setor.total }}</span>
+                    </h3>
+                    {% for jogador in setor.jogadores %}
+                    <div class="elenco-item">
+                        <img class="elenco-item__escudo"
+                             src="{{ jogador.clube.escudo_publico }}"
+                             alt="{{ jogador.clube.nome }}">
+                        <div>
+                            <div class="elenco-item__nome">
+                                {{ jogador.nome }}
+                                {% if jogador.capitao %}<span title="Capitão">🅲</span>{% endif %}
+                            </div>
+                            <div class="elenco-item__sub">
+                                <span class="badge-pos badge-pos--{{ jogador.badge_posicao }}">{{ jogador.funcao|default:jogador.posicao }}</span>
+                                #{{ jogador.numero }} · {{ jogador.clube.nome }} ·
+                                {{ jogador.gols }}G {{ jogador.assistencias }}A · {{ jogador.posse_bola }}%
+                            </div>
                         </div>
-                        <div class="elenco-item__sub">
-                            <span class="badge-pos badge-pos--{{ jogador.badge_posicao }}">{{ jogador.funcao|default:jogador.posicao }}</span>
-                            #{{ jogador.numero }} · {{ jogador.clube.nome }} ·
-                            {{ jogador.gols }}G {{ jogador.assistencias }}A · {{ jogador.posse_bola }}%
+                        <div class="elenco-item__acoes">
+                            <a class="acao-icone"
+                               href="{% url 'futebol_noticia_criar' escalacao.pk jogador.pk %}"
+                               title="Adicionar notícia">📰</a>
+                            <a class="acao-icone"
+                               href="{% url 'futebol_jogador_editar' escalacao.pk jogador.pk %}"
+                               title="Editar">✎</a>
+                            <a class="acao-icone acao-icone--perigo"
+                               href="{% url 'futebol_jogador_excluir' escalacao.pk jogador.pk %}"
+                               title="Remover">✕</a>
                         </div>
                     </div>
-                    <div class="elenco-item__acoes">
-                        <a class="acao-icone"
-                           href="{% url 'futebol_noticia_criar' escalacao.pk jogador.pk %}"
-                           title="Adicionar notícia">📰</a>
-                        <a class="acao-icone"
-                           href="{% url 'futebol_jogador_editar' escalacao.pk jogador.pk %}"
-                           title="Editar">✎</a>
-                        <a class="acao-icone acao-icone--perigo"
-                           href="{% url 'futebol_jogador_excluir' escalacao.pk jogador.pk %}"
-                           title="Remover">✕</a>
-                    </div>
-                </div>
+                    {% endfor %}
+                </section>
                 {% endfor %}
             </div>
             {% else %}
