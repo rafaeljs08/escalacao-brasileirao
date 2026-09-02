@@ -8,6 +8,10 @@
 ![Django](https://img.shields.io/badge/Django-5.2-092E20?style=for-the-badge&logo=django&logoColor=white)
 ![SQLite](https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white)
 
+[🎬 Demonstração](#-demonstração) ·
+[🚀 Instalação](#-instalação-e-execução) ·
+[🌐 Rotas](#-rotas)
+
 </div>
 
 ---
@@ -23,7 +27,7 @@ Projeto desenvolvido para a disciplina **Programação Backend (Python/Django)**
 
 ---
 
-##  Funcionalidades
+## ✨ Funcionalidades
 
 | Recurso | Descrição |
 |---------|-----------|
@@ -44,7 +48,37 @@ laterais.
 
 ---
 
-##  Instalação e execução
+## 🎬 Demonstração
+
+Tutorial visual da aplicação: lista de times, campo interativo em 4-3-3 e o formulário
+de jogador. Sem narração — só o app em uso.
+
+<video src="docs/assets/demo-escalacao.mp4" poster="docs/assets/demo-campo.png" width="100%" controls playsinline>
+</video>
+
+[Assistir o tutorial (MP4)](docs/assets/demo-escalacao.mp4)
+
+### Lista de times
+
+Tela inicial com os times criados, formação, escudos empilhados e progresso da escalação.
+
+![Lista de times](docs/assets/demo-lista-times.png)
+
+### Campo interativo
+
+Escalação no gramado, com jogadores de clubes diferentes da Série A, estatísticas e elenco ao lado.
+
+![Campo da escalação](docs/assets/demo-campo.png)
+
+### Cadastro e edição de jogador
+
+Formulário de CRUD pelo site: clube, posição, gols, assistências e capitão — sem usar o admin.
+
+![Formulário de jogador](docs/assets/demo-formulario-jogador.png)
+
+---
+
+## 🚀 Instalação e execução
 
 ```bash
 # 1. Clone o repositório
@@ -78,7 +112,7 @@ Acesse **http://127.0.0.1:8000/**
 
 ---
 
-##  Rotas
+## 🌐 Rotas
 
 | URL | Método | Descrição |
 |-----|--------|-----------|
@@ -95,7 +129,7 @@ Acesse **http://127.0.0.1:8000/**
 
 ---
 
-##  Modelo de dados
+## 🗄 Modelo de dados
 
 ### `Clube`
 | Campo | Tipo | Descrição |
@@ -136,7 +170,7 @@ Acesse **http://127.0.0.1:8000/**
 
 ---
 
-##  Interface
+## 🎨 Interface
 
 - **Campo vertical** desenhado em CSS e SVG, com círculo central, grandes e pequenas
   áreas, marcas de pênalti, arcos e escanteios
@@ -152,12 +186,17 @@ time pelo comando `seed_brasileirao`, sem depender de arquivos externos.
 
 ---
 
-##  Estrutura
+## 📁 Estrutura
 
 ```
 escalacao-brasileirao/
 ├── manage.py
 ├── requirements.txt
+├── docs/assets/
+│   ├── demo-escalacao.mp4         # Tutorial visual do app
+│   ├── demo-lista-times.png
+│   ├── demo-campo.png
+│   └── demo-formulario-jogador.png
 ├── core/                          # Configuração do projeto
 │   ├── settings.py
 │   └── urls.py
@@ -178,7 +217,7 @@ escalacao-brasileirao/
 
 ---
 
-##  Stack
+## 🛠 Stack
 
 | Tecnologia | Uso |
 |------------|-----|
@@ -189,11 +228,11 @@ escalacao-brasileirao/
 
 ---
 
-##  Autor
+## 👨‍💻 Autor
 
 **Rafael Junqueira**
 
- **Programação Backend (Python/Django)**
+Trabalho da disciplina **Programação Backend (Python/Django)**
 
 <div align="center">
 
