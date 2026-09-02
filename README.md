@@ -23,7 +23,7 @@ Projeto desenvolvido para a disciplina **Programação Backend (Python/Django)**
 
 ---
 
-## ✨ Funcionalidades
+##  Funcionalidades
 
 | Recurso | Descrição |
 |---------|-----------|
@@ -44,7 +44,7 @@ laterais.
 
 ---
 
-## 🚀 Instalação e execução
+##  Instalação e execução
 
 ```bash
 # 1. Clone o repositório
@@ -78,7 +78,7 @@ Acesse **http://127.0.0.1:8000/**
 
 ---
 
-## 🌐 Rotas
+##  Rotas
 
 | URL | Método | Descrição |
 |-----|--------|-----------|
@@ -95,7 +95,7 @@ Acesse **http://127.0.0.1:8000/**
 
 ---
 
-## 🗄 Modelo de dados
+##  Modelo de dados
 
 ### `Clube`
 | Campo | Tipo | Descrição |
@@ -136,7 +136,7 @@ Acesse **http://127.0.0.1:8000/**
 
 ---
 
-## 🎨 Interface
+##  Interface
 
 - **Campo vertical** desenhado em CSS e SVG, com círculo central, grandes e pequenas
   áreas, marcas de pênalti, arcos e escanteios
@@ -152,7 +152,7 @@ time pelo comando `seed_brasileirao`, sem depender de arquivos externos.
 
 ---
 
-## 📁 Estrutura
+##  Estrutura
 
 ```
 escalacao-brasileirao/
@@ -178,7 +178,7 @@ escalacao-brasileirao/
 
 ---
 
-## 🛠 Stack
+##  Stack
 
 | Tecnologia | Uso |
 |------------|-----|
@@ -189,11 +189,11 @@ escalacao-brasileirao/
 
 ---
 
-## 👨‍💻 Autor
+##  Autor
 
 **Rafael Junqueira**
 
-Trabalho da disciplina **Programação Backend (Python/Django)**
+ **Programação Backend (Python/Django)**
 
 <div align="center">
 
