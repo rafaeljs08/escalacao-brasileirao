@@ -48,8 +48,8 @@ laterais.
 
 ```bash
 # 1. Clone o repositório
-git clone https://github.com/rafaeljs08/Escala-o-Brasileir-o_CRUD.git
-cd Escala-o-Brasileir-o_CRUD
+git clone https://github.com/rafaeljs08/escalacao-brasileirao.git
+cd escalacao-brasileirao
 
 # 2. Crie e ative o ambiente virtual
 python -m venv venv
@@ -155,7 +155,7 @@ time pelo comando `seed_brasileirao`, sem depender de arquivos externos.
 ## 📁 Estrutura
 
 ```
-Escala-o-Brasileir-o_CRUD/
+escalacao-brasileirao/
 ├── manage.py
 ├── requirements.txt
 ├── core/                          # Configuração do projeto
