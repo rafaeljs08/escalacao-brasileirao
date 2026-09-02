@@ -54,9 +54,7 @@
 {% for grupo in agrupados %}
 <section class="catalogo-clube card">
     <header class="catalogo-clube__topo">
-        {% if grupo.clube.escudo %}
-        <img src="{{ grupo.clube.escudo_publico }}" alt="" class="elenco-item__escudo">
-        {% endif %}
+        <img src="{{ grupo.clube.escudo_publico }}" alt="{{ grupo.clube.sigla }}" class="elenco-item__escudo">
         <div>
             <h2>{{ grupo.clube.nome }}</h2>
             <p class="elenco-item__sub">{{ grupo.clube.sigla }} · {{ grupo.atletas|length }} jogador{{ grupo.atletas|length|pluralize:"es" }}</p>

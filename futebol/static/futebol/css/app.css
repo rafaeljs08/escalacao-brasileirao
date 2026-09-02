@@ -315,6 +315,10 @@ a { color: inherit; }
     width: 26px;
     height: 29px;
     margin-right: -8px;
+    object-fit: contain;
+    background: #f8fafc;
+    border-radius: 4px;
+    padding: 1px;
     filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.5));
 }
 
@@ -396,8 +400,12 @@ a { color: inherit; }
 }
 
 .elenco-item__escudo {
-    width: 30px;
-    height: 34px;
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+    background: #f8fafc;
+    border-radius: 6px;
+    padding: 3px;
 }
 
 .elenco-item__nome {
