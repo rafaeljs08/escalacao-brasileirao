@@ -26,9 +26,10 @@ vertical, no padrão visual dos aplicativos de fantasy game. O time não pertenc
 clube específico: cada jogador é cadastrado com o clube da Série A a que pertence, então
 é possível ter um atacante do Flamengo ao lado de um meia do Palmeiras.
 
-O elenco vem de um **catálogo local dos 20 clubes** (82 atletas). Com uma chave da
-[API Futebol](https://www.api-futebol.com.br/documentacao), o comando `sync_api_futebol`
-atualiza esse cadastro com a artilharia oficial do Brasileirão.
+O elenco começa no **catálogo local** e pode crescer com o Cartola e a
+[API Futebol](https://www.api-futebol.com.br/documentacao) (`sync_api_futebol`
+traz a artilharia oficial). No seed acadêmico há 20 clubes; o sync da temporada
+atual pode incluir Athletico-PR, Coritiba, Chapecoense e Remo.
 
 Projeto desenvolvido para a disciplina **Programação Backend (Python/Django)**.
 
@@ -38,11 +39,11 @@ Projeto desenvolvido para a disciplina **Programação Backend (Python/Django)**
 
 | Recurso | Descrição |
 |---------|-----------|
-| **Times** | Crie quantos times quiser, cada um com nome, cartoleiro e formação |
+| **Times** | Crie quantos times quiser, cada um com nome, torcedor e formação |
 | **7 formações** | `3-4-3`, `3-5-2`, `4-3-3`, `4-4-2`, `4-5-1`, `5-3-2` e `5-4-1` |
-| **20 clubes** | Todos os clubes da Série A, com escudo, sigla e cores próprias |
-| **Catálogo de jogadores** | 82 atletas no `seed`; lista em `/atletas/` com filtro por nome, clube e posição |
-| **Busca ao escalar** | Digite o nome no formulário e os campos (clube, posição, camisa, gols) preencham sozinhos |
+| **Clubes da Série A** | Escudo, sigla e cores; seed com 20 clubes, sync com o elenco da temporada |
+| **Catálogo de jogadores** | Lista em `/atletas/` com filtro por nome, clube, setor e função tática |
+| **Busca ao escalar** | Digite o nome no formulário e os campos (clube, posição, função, camisa, gols) preencham sozinhos |
 | **API Futebol** | Com `API_FUTEBOL_KEY`, sincroniza a artilharia oficial (`campeonato_id = 10`) |
 | **Campo interativo** | Vagas livres são clicáveis e já abrem o formulário na posição certa |
 | **Estatísticas** | Gols, assistências e posse de bola por atleta, com totais do time |
@@ -60,44 +61,55 @@ laterais.
 
 ## 🎬 Demonstração
 
-Tutorial visual da aplicação: lista de times, campo interativo em 4-3-3 e o formulário
-de jogador. Sem narração — só o app em uso.
+Telas do sistema, recortadas só na interface (sem barra do navegador nem desktop).
+Tutorial em vídeo, sem narração:
 
-<video src="docs/assets/demo-escalacao.mp4" poster="docs/assets/demo-campo.png" width="100%" controls playsinline>
+<video src="docs/assets/demo-escalacao.mp4" poster="docs/assets/demo-campo.png" width="920" controls playsinline>
 </video>
 
-[Assistir o tutorial (MP4)](docs/assets/demo-escalacao.mp4)
+<p align="center"><a href="docs/assets/demo-escalacao.mp4">Assistir o tutorial (MP4)</a></p>
 
 ### Lista de times
 
-Tela inicial com os times criados, formação, escudos empilhados e progresso da escalação.
+Tela inicial: times criados, formação, escudos empilhados e progresso da escalação.
 
-![Lista de times](docs/assets/demo-lista-times.png)
+<p align="center">
+  <img src="docs/assets/demo-lista-times.png" alt="Lista de times — Monte a sua escalação" width="920">
+</p>
 
 ### Campo interativo
 
-Escalação no gramado, com jogadores de clubes diferentes da Série A, estatísticas e elenco ao lado.
+Escalação 4-3-3 no gramado, com jogadores de clubes diferentes, estatísticas e elenco ao lado.
 
-![Campo da escalação](docs/assets/demo-campo.png)
+<p align="center">
+  <img src="docs/assets/demo-campo.png" alt="Campo interativo da Seleção do Brasileirão em 4-3-3" width="920">
+</p>
 
 ### Catálogo da Série A
 
-Página **Jogadores**: 82 atletas agrupados por clube, com filtro de nome, time e posição.
+Página **Jogadores**: elenco com filtro por nome, clube, setor e função tática
+(CA, MAT, LD, LE…). Aqui, o recorte do Flamengo.
 
-![Catálogo de atletas](docs/assets/demo-catalogo-atletas.png)
+<p align="center">
+  <img src="docs/assets/demo-catalogo-atletas.png" alt="Catálogo de atletas filtrado pelo Flamengo" width="920">
+</p>
 
 ### Busca no formulário
 
 Ao escalar ou editar, a busca **“Buscar no elenco da Série A”** preenche nome, clube,
-posição, camisa e gols — ainda é possível cadastrar na mão.
+posição, função, camisa e gols — ainda dá para cadastrar na mão.
 
-![Busca no elenco](docs/assets/demo-busca-elenco.png)
+<p align="center">
+  <img src="docs/assets/demo-busca-elenco.png" alt="Busca no elenco ao editar Arrascaeta" width="920">
+</p>
 
 ### Cadastro e edição de jogador
 
-Formulário de CRUD pelo site: clube, posição, gols, assistências e capitão — sem usar o admin.
+CRUD pelo site: clube, posição na formação, função tática, gols, assistências e capitão.
 
-![Formulário de jogador](docs/assets/demo-formulario-jogador.png)
+<p align="center">
+  <img src="docs/assets/demo-formulario-jogador.png" alt="Formulário para escalar um jogador" width="920">
+</p>
 
 ---
 
@@ -153,7 +165,7 @@ pip install -r requirements.txt
 # 3. Aplique as migrações
 python manage.py migrate
 
-# 4. Cadastre os 20 clubes, o catálogo de 82 jogadores, os escudos e um time de exemplo
+# 4. Cadastre os 20 clubes, o catálogo local, os escudos e um time de exemplo
 python manage.py seed_brasileirao
 
 # 5. (Opcional) Sincronize a artilharia oficial da API Futebol
@@ -179,7 +191,8 @@ Acesse **http://127.0.0.1:8000/**
 ## 📦 Como o catálogo funciona
 
 O menu **Jogadores** lista o elenco de referência. Sem chave da API o app já funciona:
-`seed_brasileirao` grava 82 atletas dos 20 clubes (fonte `local`).
+`seed_brasileirao` grava o catálogo local dos 20 clubes (fonte `local`). O sync do
+Cartola amplia esse elenco e preenche a função tática quando ela é conhecida.
 
 No formulário de escalação, a busca consulta `/atletas.json` e preenche o cadastro.
 A posição escolhida ainda precisa ter vaga livre na formação do time.
