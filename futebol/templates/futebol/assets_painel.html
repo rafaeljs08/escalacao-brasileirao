@@ -1,0 +1,73 @@
+{% extends 'futebol/base.html' %}
+
+{% block titulo %}Assets{% endblock %}
+
+{% block conteudo %}
+<div class="page-head">
+    <div>
+        <span class="eyebrow">Brasileirão Asset Manager</span>
+        <h1>Imagens de jogadores e escudos</h1>
+        <p class="page-head__sub">
+            Fontes públicas (Cartola) e providers opcionais. Silhuetas do Cartola
+            entram como <strong>FALLBACK</strong> — não são retratos inventados.
+        </p>
+    </div>
+</div>
+
+{% if mensagem %}
+<div class="mensagem">{{ mensagem }}</div>
+{% endif %}
+
+<div class="stats">
+    <div class="stat"><span class="stat__valor">{{ total_clubes }}</span><span class="stat__rotulo">Clubes</span></div>
+    <div class="stat"><span class="stat__valor">{{ total_jogadores }}</span><span class="stat__rotulo">Jogadores</span></div>
+    <div class="stat"><span class="stat__valor">{{ fotos_ok }}</span><span class="stat__rotulo">Fotos OK</span></div>
+    <div class="stat"><span class="stat__valor">{{ fotos_fallback }}</span><span class="stat__rotulo">Fallback</span></div>
+    <div class="stat"><span class="stat__valor">{{ fotos_ausentes }}</span><span class="stat__rotulo">Ausentes</span></div>
+    <div class="stat"><span class="stat__valor">{{ escudos }}</span><span class="stat__rotulo">Escudos locais</span></div>
+    <div class="stat"><span class="stat__valor">{{ invalidos }}</span><span class="stat__rotulo">Inválidos</span></div>
+</div>
+
+<p class="catalogo-resumo">
+    Último sync:
+    {% if ultimo_sync.generated_at %}{{ ultimo_sync.generated_at }} · temporada {{ ultimo_sync.season }}{% else %}nunca{% endif %}
+</p>
+
+<form method="post" class="form-acoes">
+    {% csrf_token %}
+    <button class="btn btn--primario" name="acao" value="sync" type="submit">Sincronizar</button>
+    <button class="btn btn--secundario" name="acao" value="validate" type="submit">Validar assets</button>
+    <button class="btn btn--secundario" name="acao" value="missing" type="submit">Baixar ausentes</button>
+</form>
+
+<div class="card" style="margin-top:1.2rem; overflow:auto">
+    <table class="tabela-assets">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Jogador</th>
+                <th>Clube</th>
+                <th>Foto</th>
+                <th>Fonte</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for atleta in atletas %}
+            <tr>
+                <td>{{ atleta.fonte_id|default:atleta.pk }}</td>
+                <td>{{ atleta.nome }}</td>
+                <td>{{ atleta.clube.sigla }}</td>
+                <td>
+                    <img src="{{ atleta.foto_publica }}" alt="" width="36" height="36" style="border-radius:8px; object-fit:cover">
+                </td>
+                <td>{{ atleta.foto_fonte|default:atleta.fonte }}</td>
+                <td><span class="pill status-{{ atleta.foto_status }}">{{ atleta.foto_status|upper }}</span></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6">Nenhum atleta no catálogo. Rode <code>python sync.py</code> ou o seed.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

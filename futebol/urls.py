@@ -1,6 +1,7 @@
 from django.urls import path
 
 from . import views
+from .assetsmgr import views as asset_views
 
 urlpatterns = [
     path('', views.escalacao_lista, name='futebol'),
@@ -19,4 +20,15 @@ urlpatterns = [
     ),
     path('atletas/', views.atletas_catalogo, name='futebol_atletas'),
     path('atletas.json', views.catalogo_json, name='futebol_catalogo_json'),
+    path('painel/assets/', asset_views.painel_assets, name='futebol_assets'),
+    path('assets/<str:kind>/<str:filename>', asset_views.servir_arquivo, name='futebol_asset_arquivo'),
+    path('api/teams', asset_views.api_teams, name='api_teams'),
+    path('api/teams/<int:pk>', asset_views.api_team_detail, name='api_team_detail'),
+    path('api/teams/<int:pk>/logo', asset_views.api_team_logo, name='api_team_logo'),
+    path('api/players', asset_views.api_players, name='api_players'),
+    path('api/players/<int:pk>', asset_views.api_player_detail, name='api_player_detail'),
+    path('api/players/<int:pk>/image', asset_views.api_player_image, name='api_player_image'),
+    path('api/assets/status', asset_views.api_assets_status, name='api_assets_status'),
+    path('api/assets/missing', asset_views.api_assets_missing, name='api_assets_missing'),
+    path('api/sync/status', asset_views.api_sync_status, name='api_sync_status'),
 ]

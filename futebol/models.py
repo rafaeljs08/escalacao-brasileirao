@@ -1,6 +1,7 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.urls import reverse
+from django.utils import timezone
 
 
 class Clube(models.Model):
@@ -13,6 +14,11 @@ class Clube(models.Model):
     cor_primaria = models.CharField(max_length=7, default='#111827')
     cor_secundaria = models.CharField(max_length=7, default='#ffffff')
     escudo = models.CharField(max_length=200, blank=True)
+    slug = models.SlugField(max_length=80, blank=True)
+    fonte_id = models.PositiveIntegerField('ID no provider', unique=True, null=True, blank=True)
+    logo_url = models.URLField('URL do escudo', max_length=500, blank=True)
+    logo_local = models.CharField('Escudo local', max_length=300, blank=True)
+    logo_fonte = models.CharField('Fonte do escudo', max_length=40, blank=True)
 
     class Meta:
         ordering = ['nome']
@@ -21,6 +27,17 @@ class Clube(models.Model):
 
     def __str__(self):
         return self.nome
+
+    def escudo_publico(self):
+        """URL servida pelo Asset Manager, ou o SVG estático do seed."""
+        if self.logo_local:
+            return f'/assets/{self.logo_local.lstrip("/")}'
+        if self.logo_url:
+            return self.logo_url
+        if self.escudo:
+            from django.templatetags.static import static
+            return static(self.escudo)
+        return '/assets/placeholders/team.png'
 
 
 class Escalacao(models.Model):
@@ -152,18 +169,40 @@ class Jogador(models.Model):
     def participacoes(self):
         return self.gols + self.assistencias
 
+    def foto_resolvida(self):
+        """Foto informada no CRUD, senão a do catálogo/asset manager."""
+        if self.foto:
+            return self.foto
+        catalogo = (
+            AtletaCatalogo.objects.filter(nome=self.nome, clube_id=self.clube_id)
+            .exclude(foto_local='')
+            .first()
+        )
+        if catalogo:
+            return catalogo.foto_publica()
+        return ''
+
 
 class AtletaCatalogo(models.Model):
     """Jogador da Série A disponível para escalar, vindo da API ou do catálogo local."""
 
     FONTE_CHOICES = [
         ('local', 'Catálogo local'),
+        ('cartola', 'Cartola FC'),
         ('artilharia', 'Artilharia (API Futebol)'),
         ('escalacao', 'Escalação de partida (API Futebol)'),
     ]
+    FOTO_STATUS = [
+        ('ok', 'OK'),
+        ('missing', 'MISSING'),
+        ('invalid', 'INVALID'),
+        ('fallback', 'FALLBACK'),
+    ]
 
     api_id = models.PositiveIntegerField('ID na API Futebol', unique=True, null=True, blank=True)
+    fonte_id = models.PositiveIntegerField('ID no provider de assets', unique=True, null=True, blank=True)
     nome = models.CharField('Nome', max_length=80)
+    slug = models.SlugField(max_length=120, blank=True)
     clube = models.ForeignKey(
         Clube,
         on_delete=models.CASCADE,
@@ -174,6 +213,10 @@ class AtletaCatalogo(models.Model):
     numero = models.PositiveSmallIntegerField('Camisa', null=True, blank=True)
     gols = models.PositiveIntegerField('Gols', default=0)
     fonte = models.CharField('Origem', max_length=20, choices=FONTE_CHOICES, default='local')
+    foto_url = models.URLField('URL da foto', max_length=500, blank=True)
+    foto_local = models.CharField('Foto local', max_length=300, blank=True)
+    foto_fonte = models.CharField('Fonte da foto', max_length=40, blank=True)
+    foto_status = models.CharField('Status da foto', max_length=12, choices=FOTO_STATUS, default='missing')
     atualizado_em = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -186,6 +229,13 @@ class AtletaCatalogo(models.Model):
 
     def __str__(self):
         return f'{self.nome} ({self.clube.sigla})'
+
+    def foto_publica(self):
+        if self.foto_local:
+            return f'/assets/{self.foto_local.lstrip("/")}'
+        if self.foto_url:
+            return self.foto_url
+        return '/assets/placeholders/player.png'
 
 
 class Noticia(models.Model):
@@ -205,3 +255,58 @@ class Noticia(models.Model):
 
     def __str__(self):
         return self.titulo
+
+
+class Asset(models.Model):
+    """Registro de auditoria de cada imagem baixada (foto ou escudo)."""
+
+    ENTITY_CHOICES = [
+        ('team', 'Clube'),
+        ('player', 'Jogador'),
+    ]
+    KIND_CHOICES = [
+        ('logo', 'Escudo'),
+        ('photo', 'Foto'),
+    ]
+    STATUS_CHOICES = [
+        ('ok', 'OK'),
+        ('missing', 'MISSING'),
+        ('invalid', 'INVALID'),
+        ('fallback', 'FALLBACK'),
+        ('error', 'ERROR'),
+    ]
+
+    entity_type = models.CharField(max_length=12, choices=ENTITY_CHOICES)
+    entity_id = models.PositiveIntegerField()
+    asset_type = models.CharField(max_length=12, choices=KIND_CHOICES)
+    url = models.URLField(max_length=500, blank=True)
+    local_path = models.CharField(max_length=300, blank=True)
+    provider = models.CharField(max_length=40, blank=True)
+    sha256 = models.CharField(max_length=64, blank=True)
+    size = models.PositiveIntegerField(default=0)
+    mime = models.CharField(max_length=60, blank=True)
+    width = models.PositiveIntegerField(null=True, blank=True)
+    height = models.PositiveIntegerField(null=True, blank=True)
+    status = models.CharField(max_length=12, choices=STATUS_CHOICES, default='missing')
+    fallback_used = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ['entity_type', 'entity_id']
+        verbose_name = 'Asset'
+        verbose_name_plural = 'Assets'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['entity_type', 'entity_id', 'asset_type'],
+                name='asset_entidade_tipo_unico',
+            ),
+        ]
+
+    def __str__(self):
+        return f'{self.entity_type}:{self.entity_id}:{self.asset_type}'
+
+    def publico(self):
+        if self.local_path:
+            return f'/assets/{self.local_path.lstrip("/")}'
+        return self.url or ''

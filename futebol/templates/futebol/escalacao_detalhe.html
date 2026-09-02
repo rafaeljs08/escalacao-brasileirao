@@ -60,11 +60,11 @@
                        href="{% url 'futebol_jogador_editar' escalacao.pk slot.jogador.pk %}"
                        title="{{ slot.jogador.nome }} — {{ slot.jogador.clube.nome }}">
                         <span class="atleta__avatar"
-                              {% if slot.jogador.foto %}style="background-image: url('{{ slot.jogador.foto }}')"{% endif %}>
+                              {% if slot.jogador.foto_resolvida %}style="background-image: url('{{ slot.jogador.foto_resolvida }}')"{% endif %}>
                             <span class="atleta__numero">{{ slot.jogador.numero }}</span>
                             {% if slot.jogador.capitao %}<span class="atleta__capitao">C</span>{% endif %}
                             <img class="atleta__escudo"
-                                 src="{% static slot.jogador.clube.escudo %}"
+                                 src="{{ slot.jogador.clube.escudo_publico }}"
                                  alt="{{ slot.jogador.clube.nome }}">
                         </span>
                         <span class="atleta__faixa">
@@ -120,7 +120,7 @@
                 {% for jogador in jogadores %}
                 <div class="elenco-item">
                     <img class="elenco-item__escudo"
-                         src="{% static jogador.clube.escudo %}"
+                         src="{{ jogador.clube.escudo_publico }}"
                          alt="{{ jogador.clube.nome }}">
                     <div>
                         <div class="elenco-item__nome">
@@ -170,7 +170,7 @@
                 <li class="noticia">
                     <div>
                         <span class="noticia__autor">
-                            <img src="{% static jogador.clube.escudo %}" alt="" width="14" height="16">
+                            <img src="{{ jogador.clube.escudo_publico }}" alt="" width="14" height="16">
                             {{ jogador.nome }}
                         </span>
                         <h4>{{ noticia.titulo }}</h4>

@@ -161,10 +161,14 @@ python manage.py seed_brasileirao
 cp .env.example .env   # edite API_FUTEBOL_KEY
 python manage.py sync_api_futebol
 
-# 6. (Opcional) Crie um superusuário para acessar o admin
+# 6. (Opcional) Baixe escudos e fotos públicas (Cartola; sem chave)
+python sync.py --dry-run
+python manage.py sync_assets
+
+# 7. (Opcional) Crie um superusuário para acessar o admin
 python manage.py createsuperuser
 
-# 7. Inicie o servidor
+# 8. Inicie o servidor
 python manage.py runserver
 ```
 
@@ -197,6 +201,12 @@ A posição escolhida ainda precisa ter vaga livre na formação do time.
 | `/time/<id>/jogador/<id>/noticia/nova/` | `GET` / `POST` | Publica uma notícia |
 | `/atletas/` | `GET` | Catálogo de jogadores da Série A, com filtro por clube e posição |
 | `/atletas.json` | `GET` | JSON usado pela busca no formulário de escalação |
+| `/painel/assets/` | `GET` / `POST` | Painel do Asset Manager (totais, sync, validação) |
+| `/assets/teams/<arquivo>` | `GET` | Escudo local |
+| `/assets/players/<arquivo>` | `GET` | Foto local |
+| `/api/teams` | `GET` | Clubes em JSON |
+| `/api/players` | `GET` | Jogadores do catálogo em JSON |
+| `/api/assets/status` | `GET` | Totais e último sync |
 | `/admin/` | `GET` / `POST` | Painel administrativo |
 
 ---
@@ -229,6 +239,21 @@ API_FUTEBOL_KEY=live_xxx python manage.py sync_api_futebol --com-escalacoes
 
 A chave fica em variável de ambiente ou no arquivo `.env` (veja `.env.example`).
 Nunca coloque a chave no frontend: as chamadas saem só do `manage.py`.
+
+---
+
+## 🖼 Asset Manager
+
+Módulo interno (`futebol/assetsmgr`) que busca clubes e atletas no Cartola,
+resolve URLs de escudo/foto, baixa com retry/rate-limit, valida a imagem e
+grava cache local. **Não inventa retrato.**
+
+- Painel: `/painel/assets/` (o Django Admin já ocupa `/admin/`)
+- CLI: `python sync.py` ou `python manage.py sync_assets`
+- Documentação de origem/licença: [docs/assets.md](docs/assets.md)
+- Na temporada 2026 o Cartola tem devolvido **silhuetas** no campo `foto`;
+  elas entram como `FALLBACK`. Retratos reais exigem `API_FOOTBALL_KEY` ou
+  `SPORTMONKS_TOKEN`.
 
 ---
 
@@ -320,6 +345,7 @@ escalacao-brasileirao/
 └── futebol/                       # App da escalação
     ├── models.py                  # Clube, Escalacao, Jogador, Noticia, AtletaCatalogo
     ├── catalogo.py                # Importação local e da API Futebol
+    ├── assetsmgr/                 # Asset Manager (providers, download, validação)
     ├── forms.py                   # Validação de vagas por formação
     ├── views.py                   # CRUD, campo e catálogo
     ├── urls.py
@@ -328,7 +354,8 @@ escalacao-brasileirao/
     ├── services/api_futebol.py    # Cliente HTTPS da API Futebol
     ├── management/commands/
     │   ├── seed_brasileirao.py    # Clubes, escudos, catálogo e time de exemplo
-    │   └── sync_api_futebol.py    # Artilharia / escalações oficiais
+    │   ├── sync_api_futebol.py    # Artilharia / escalações oficiais
+    │   └── sync_assets.py         # Fotos e escudos (Cartola / providers)
     ├── static/futebol/
     │   ├── css/app.css            # Design system
     │   ├── css/campo.css          # Campo de futebol

@@ -94,3 +94,22 @@ if _env_file.exists():
 
 API_FUTEBOL_KEY = os.environ.get('API_FUTEBOL_KEY', '').strip()
 API_FUTEBOL_CAMPEONATO_ID = int(os.environ.get('API_FUTEBOL_CAMPEONATO_ID', '10'))
+
+# Brasileirão Asset Manager — URLs/tokens só por ambiente.
+CARTOLA_BASE_URL = os.environ.get('CARTOLA_BASE_URL', 'https://api.cartola.globo.com').rstrip('/')
+CARTOLA_PHOTO_FORMAT = os.environ.get('CARTOLA_PHOTO_FORMAT', '220x220.png')
+API_FOOTBALL_BASE_URL = os.environ.get('API_FOOTBALL_BASE_URL', 'https://v3.football.api-sports.io').rstrip('/')
+API_FOOTBALL_KEY = os.environ.get('API_FOOTBALL_KEY', '').strip()
+SPORTMONKS_BASE_URL = os.environ.get('SPORTMONKS_BASE_URL', 'https://api.sportmonks.com/v3/football').rstrip('/')
+SPORTMONKS_TOKEN = os.environ.get('SPORTMONKS_TOKEN', '').strip()
+ASSETS_DIR = Path(os.environ.get('ASSETS_DIR', BASE_DIR / 'assets'))
+DATA_DIR = Path(os.environ.get('DATA_DIR', BASE_DIR / 'data'))
+ASSET_LOGS_DIR = Path(os.environ.get('ASSET_LOGS_DIR', BASE_DIR / 'logs'))
+REQUEST_TIMEOUT = float(os.environ.get('REQUEST_TIMEOUT', '15'))
+MAX_RETRIES = int(os.environ.get('MAX_RETRIES', '3'))
+REQUEST_DELAY = float(os.environ.get('REQUEST_DELAY', '0.5'))
+ASSET_SEASON = int(os.environ.get('ASSET_SEASON', '2026'))
+ASSET_PROVIDERS = os.environ.get('ASSET_PROVIDERS', 'cartola,api_football,sportmonks,fallback')
+ASSET_ALLOWED_HOSTS = os.environ.get('ASSET_ALLOWED_HOSTS', '')
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'

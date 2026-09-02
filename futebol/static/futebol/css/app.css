@@ -720,7 +720,7 @@ a { color: inherit; }
 
 .catalogo-elenco li {
     display: grid;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: auto auto 1fr auto;
     align-items: center;
     gap: 0.7rem;
     padding: 0.55rem 0.15rem;
@@ -761,3 +761,28 @@ code {
     .form-grid { grid-template-columns: 1fr; }
     .page-head { margin-top: 1.8rem; }
 }
+
+.tabela-assets {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.86rem;
+}
+
+.tabela-assets th {
+    text-align: left;
+    color: var(--texto-fraco);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.5rem 0.4rem;
+}
+
+.tabela-assets td {
+    padding: 0.45rem 0.4rem;
+    border-top: 1px solid var(--borda);
+}
+
+.status-ok { color: #86efac; }
+.status-missing { color: #fca5a5; }
+.status-invalid { color: #fcd34d; }
+.status-fallback { color: #93c5fd; }

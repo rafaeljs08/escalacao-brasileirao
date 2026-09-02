@@ -34,7 +34,7 @@
 
         <div class="escudos-empilhados">
             {% for jogador in time.jogadores.all|slice:":6" %}
-            <img src="{% static jogador.clube.escudo %}" alt="{{ jogador.clube.nome }}">
+            <img src="{{ jogador.clube.escudo_publico }}" alt="{{ jogador.clube.nome }}">
             {% empty %}
             <span class="time-card__meta">Nenhum jogador escalado ainda</span>
             {% endfor %}

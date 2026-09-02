@@ -50,6 +50,8 @@ class JogadorForm(forms.ModelForm):
         if catalogo.numero:
             dados['numero'] = str(catalogo.numero)
         dados['gols'] = str(catalogo.gols)
+        if (catalogo.foto_url or '').startswith('http'):
+            dados['foto'] = catalogo.foto_url
         self.data = dados
 
     def clean_posicao(self):

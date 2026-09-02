@@ -274,6 +274,7 @@ def catalogo_json(request):
             'posicao_label': POSICAO_LABEL[atleta.posicao],
             'numero': atleta.numero,
             'gols': atleta.gols,
+            'foto': atleta.foto_publica(),
         }
         for atleta in atletas[:80]
     ]
