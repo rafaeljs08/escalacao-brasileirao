@@ -30,14 +30,49 @@
 
 <p class="catalogo-resumo">
     Último sync:
-    {% if ultimo_sync.generated_at %}{{ ultimo_sync.generated_at }} · temporada {{ ultimo_sync.season }}{% else %}nunca{% endif %}
+    {% if ultimo_sync.generated_at %}
+        {{ ultimo_sync.generated_at }} · temporada {{ ultimo_sync.season }}
+        · {{ ultimo_sync.downloads.success|default:0 }} download{{ ultimo_sync.downloads.success|default:0|pluralize:"s" }}
+        · {{ ultimo_sync.downloads.failed|default:0 }} erro{{ ultimo_sync.downloads.failed|default:0|pluralize:"s" }}
+    {% else %}nunca{% endif %}
 </p>
 
-<form method="post" class="form-acoes">
+<form method="post" class="form-acoes" id="form-assets" data-busy="0">
     {% csrf_token %}
     <button class="btn btn--primario" name="acao" value="sync" type="submit">Sincronizar</button>
     <button class="btn btn--secundario" name="acao" value="validate" type="submit">Validar assets</button>
     <button class="btn btn--secundario" name="acao" value="missing" type="submit">Baixar ausentes</button>
+    <button class="btn btn--secundario" name="acao" value="dry" type="submit">Dry-run</button>
+</form>
+<p class="catalogo-resumo" id="assets-busy" hidden>Aguarde — a sincronização consulta as APIs com delay e retry.</p>
+
+<form method="get" class="filtros card" role="search">
+    <div class="campo-form">
+        <label for="id_q">Jogador</label>
+        <input type="search" id="id_q" name="q" value="{{ busca }}" placeholder="Nome">
+    </div>
+    <div class="campo-form">
+        <label for="id_clube">Clube</label>
+        <select id="id_clube" name="clube">
+            <option value="">Todos</option>
+            {% for clube in clubes %}
+            <option value="{{ clube.pk }}"{% if clube_atual == clube.pk %} selected{% endif %}>{{ clube.sigla }} — {{ clube.nome }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="campo-form">
+        <label for="id_status">Status</label>
+        <select id="id_status" name="status">
+            <option value="">Todos</option>
+            {% for chave, rotulo in status_opcoes %}
+            <option value="{{ chave }}"{% if status_atual == chave %} selected{% endif %}>{{ rotulo }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="filtros__acoes">
+        <button type="submit" class="btn btn--primario">Filtrar</button>
+        <a href="{% url 'futebol_assets' %}" class="btn btn--secundario">Limpar</a>
+    </div>
 </form>
 
 <div class="card" style="margin-top:1.2rem; overflow:auto">
@@ -65,9 +100,35 @@
                 <td><span class="pill status-{{ atleta.foto_status }}">{{ atleta.foto_status|upper }}</span></td>
             </tr>
             {% empty %}
-            <tr><td colspan="6">Nenhum atleta no catálogo. Rode <code>python sync.py</code> ou o seed.</td></tr>
+            <tr><td colspan="6">Nenhum atleta neste filtro. Rode <code>python sync.py</code> ou o seed.</td></tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
+
+{% if pagina.paginator.num_pages > 1 %}
+<nav class="paginacao" aria-label="Páginas do catálogo de assets">
+    {% if pagina.has_previous %}
+    <a class="btn btn--secundario" href="?page={{ pagina.previous_page_number }}&amp;q={{ busca }}&amp;status={{ status_atual }}&amp;clube={{ clube_atual }}">Anterior</a>
+    {% endif %}
+    <span class="catalogo-resumo">Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+    {% if pagina.has_next %}
+    <a class="btn btn--secundario" href="?page={{ pagina.next_page_number }}&amp;q={{ busca }}&amp;status={{ status_atual }}&amp;clube={{ clube_atual }}">Próxima</a>
+    {% endif %}
+</nav>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    var form = document.getElementById('form-assets');
+    var aviso = document.getElementById('assets-busy');
+    if (!form) return;
+    form.addEventListener('submit', function () {
+        form.querySelectorAll('button').forEach(function (btn) { btn.disabled = true; });
+        if (aviso) aviso.hidden = false;
+    });
+})();
+</script>
 {% endblock %}

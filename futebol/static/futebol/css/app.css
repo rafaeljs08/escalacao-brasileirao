@@ -786,3 +786,11 @@ code {
 .status-missing { color: #fca5a5; }
 .status-invalid { color: #fcd34d; }
 .status-fallback { color: #93c5fd; }
+
+.paginacao {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.8rem;
+    margin-top: 1rem;
+}

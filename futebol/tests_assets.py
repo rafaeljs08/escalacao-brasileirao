@@ -11,7 +11,8 @@ from futebol.assetsmgr.http import HttpError, JsonClient
 from futebol.assetsmgr.pipeline import sincronizar
 from futebol.assetsmgr.providers import primeira_foto, primeiro_logo
 from futebol.assetsmgr.providers.base import PlayerRecord, TeamRecord
-from futebol.assetsmgr.providers.cartola import CartolaProvider, SIGLA_CARTOLA_PARA_APP
+from futebol.assetsmgr.providers.cartola import CartolaProvider, SIGLA_CARTOLA_PARA_APP, melhor_escudo, nome_do_clube
+from futebol.assetsmgr.retry import backoff_segundos, deve_repetir
 from futebol.assetsmgr.validator import validate_image
 from futebol.models import Asset, AtletaCatalogo, Clube
 from futebol.management.commands.seed_brasileirao import Command as Seed
@@ -98,6 +99,15 @@ class DownloaderTests(TestCase):
         resultado = downloader.download('https://s3.glbimg.com/x.png', dest)
         self.assertEqual(resultado['status'], 429)
 
+    def test_403(self):
+        client = MagicMock()
+        client.get_bytes.side_effect = HttpError('HTTP 403', status=403)
+        downloader = AssetDownloader(client=client)
+        from tempfile import mkdtemp
+        dest = Path(mkdtemp()) / 'a.png'
+        resultado = downloader.download('https://s3.glbimg.com/x.png', dest)
+        self.assertEqual(resultado['status'], 403)
+
     def test_nao_baixa_de_novo_se_valido(self):
         from tempfile import mkdtemp
         dest = Path(mkdtemp()) / 'a.png'
@@ -108,6 +118,65 @@ class DownloaderTests(TestCase):
         self.assertTrue(resultado['skipped'])
         client.get_bytes.assert_not_called()
         self.assertTrue(cache_hit(dest, 'https://s3.glbimg.com/x.png', '', ''))
+
+
+class RetryTests(TestCase):
+    def test_backoff_exponencial(self):
+        self.assertEqual(backoff_segundos(0, 1), 1)
+        self.assertEqual(backoff_segundos(2, 1), 4)
+        self.assertEqual(backoff_segundos(10, 1, teto=8), 8)
+
+    def test_nao_repete_403_nem_404(self):
+        self.assertFalse(deve_repetir(403))
+        self.assertFalse(deve_repetir(404))
+        self.assertTrue(deve_repetir(429))
+        self.assertTrue(deve_repetir(503))
+
+
+class CacheIncrementalTests(TestCase):
+    def test_url_nova_invalida_o_cache(self):
+        from tempfile import mkdtemp
+        dest = Path(mkdtemp()) / 'a.png'
+        dest.write_bytes(_png_bytes())
+        digest = dest.read_bytes()
+        import hashlib
+        sha = hashlib.sha256(digest).hexdigest()
+        self.assertTrue(cache_hit(dest, 'https://s3.glbimg.com/old.png', 'https://s3.glbimg.com/old.png', sha))
+        self.assertFalse(cache_hit(dest, 'https://s3.glbimg.com/new.png', 'https://s3.glbimg.com/old.png', sha))
+
+    def test_hash_diferente_invalida_o_cache(self):
+        from tempfile import mkdtemp
+        dest = Path(mkdtemp()) / 'a.png'
+        dest.write_bytes(_png_bytes())
+        self.assertFalse(cache_hit(dest, 'https://s3.glbimg.com/x.png', 'https://s3.glbimg.com/x.png', 'deadbeef'))
+
+
+class ProviderInterfaceTests(TestCase):
+    def test_team_e_player_provider(self):
+        provider = _FakeProvider()
+        times = provider.get_teams()
+        jogadores = provider.get_players()
+        self.assertEqual(times[0].id, 262)
+        self.assertEqual(jogadores[0].id, 94583)
+        self.assertTrue(provider.get_team_logo(times[0]))
+        self.assertTrue(provider.get_player_image(jogadores[0]))
+
+
+class CartolaMapTests(TestCase):
+    def test_rbb_vira_bgt(self):
+        self.assertEqual(SIGLA_CARTOLA_PARA_APP['RBB'], 'BGT')
+
+    def test_resolver_formato_da_foto(self):
+        provider = CartolaProvider(client=MagicMock())
+        url = provider._resolver_foto('https://s3.glbimg.com/silhuetas/FLA/FORMATO.png')
+        self.assertIn('220x220.png', url)
+
+    def test_nome_pelo_slug_nao_pela_sigla(self):
+        self.assertEqual(nome_do_clube('atletico-pr', 'CAP', 'CAP'), 'Athletico-PR')
+        self.assertEqual(nome_do_clube('flamengo', 'FLA', 'FLA'), 'Flamengo')
+
+    def test_maior_escudo(self):
+        self.assertEqual(melhor_escudo({'30x30': 'a', '60x60': 'b'}), 'b')
 
 
 class FallbackTests(TestCase):
@@ -133,16 +202,6 @@ class FallbackTests(TestCase):
         self.assertFalse(fallback)
 
 
-class CartolaMapTests(TestCase):
-    def test_rbb_vira_bgt(self):
-        self.assertEqual(SIGLA_CARTOLA_PARA_APP['RBB'], 'BGT')
-
-    def test_resolver_formato_da_foto(self):
-        provider = CartolaProvider(client=MagicMock())
-        url = provider._resolver_foto('https://s3.glbimg.com/silhuetas/FLA/FORMATO.png')
-        self.assertIn('220x220.png', url)
-
-
 @override_settings()
 class SyncIncrementalTests(TestCase):
     def setUp(self):
@@ -162,12 +221,13 @@ class SyncIncrementalTests(TestCase):
                 with patch('futebol.assetsmgr.http.JsonClient.get_bytes', side_effect=get_bytes):
                     with patch('futebol.assetsmgr.downloader.AssetDownloader.download') as fake_dl:
                         def _dl(url, destination, force=False, normalize=False):
+                            from futebol.assetsmgr.cache import hash_arquivo
                             path = Path(destination)
                             path.parent.mkdir(parents=True, exist_ok=True)
                             path.write_bytes(png)
                             return {'valid': True, 'width': 64, 'height': 64, 'format': 'PNG',
                                     'size': len(png), 'skipped': False, 'path': str(path),
-                                    'sha256': 'abc', 'mime': 'image/png'}
+                                    'sha256': hash_arquivo(path), 'mime': 'image/png'}
                         fake_dl.side_effect = _dl
                         primeiro = sincronizar(dry_run=False, force=False)
                         segundo = sincronizar(dry_run=False, force=False)
@@ -176,9 +236,48 @@ class SyncIncrementalTests(TestCase):
         self.assertTrue(AtletaCatalogo.objects.filter(fonte_id=94583).exists())
         self.assertTrue(Asset.objects.filter(entity_type='player', entity_id=94583).exists())
         self.assertTrue((self.assets / 'players' / '94583.png').exists())
-        self.assertGreaterEqual(fake_dl.call_count, 1)
-        # segunda passagem: cache local, downloader pode ser chamado mas arquivos já valem
+        self.assertEqual(fake_dl.call_count, 2)
         self.assertEqual(Clube.objects.get(sigla='FLA').fonte_id, 262)
+
+    def test_cria_clube_ausente_no_seed(self):
+        png = _png_bytes()
+
+        class CapProvider:
+            name = 'cartola'
+            def available(self):
+                return True
+            def get_teams(self):
+                return [TeamRecord(
+                    id=293, name='Athletico-PR', short_name='CAP', slug='atletico-pr',
+                    logo_url='https://s3.glbimg.com/cap.png', source='cartola',
+                    extra={'app_sigla': 'CAP'},
+                )]
+            def get_players(self):
+                return [PlayerRecord(
+                    id=88001, name='Canobbio', slug='canobbio', team_id=293, position='ATA',
+                    photo_url='https://s3.glbimg.com/foto.png', source='cartola',
+                )]
+            def get_team_logo(self, team):
+                return team.logo_url
+            def get_player_image(self, player):
+                return player.photo_url
+
+        with override_settings(ASSETS_DIR=self.assets, DATA_DIR=self.data, REQUEST_DELAY=0):
+            with patch('futebol.assetsmgr.pipeline.load_providers', return_value=[CapProvider()]):
+                with patch('futebol.assetsmgr.downloader.AssetDownloader.download') as fake_dl:
+                    def _dl(url, destination, force=False, normalize=False):
+                        from futebol.assetsmgr.cache import hash_arquivo
+                        path = Path(destination)
+                        path.parent.mkdir(parents=True, exist_ok=True)
+                        path.write_bytes(png)
+                        return {'valid': True, 'width': 64, 'height': 64, 'format': 'PNG',
+                                'size': len(png), 'skipped': False, 'path': str(path),
+                                'sha256': hash_arquivo(path), 'mime': 'image/png'}
+                    fake_dl.side_effect = _dl
+                    sincronizar(dry_run=False, force=False)
+
+        self.assertTrue(Clube.objects.filter(sigla='CAP', fonte_id=293).exists())
+        self.assertTrue(AtletaCatalogo.objects.filter(fonte_id=88001, nome='Canobbio').exists())
 
 
 class ApiAssetsTests(TestCase):
@@ -197,3 +296,18 @@ class ApiAssetsTests(TestCase):
         resposta = self.client.get('/painel/assets/')
         self.assertEqual(resposta.status_code, 200)
         self.assertContains(resposta, 'Asset Manager')
+
+    def test_painel_filtro_vazio(self):
+        resposta = self.client.get('/painel/assets/', {'q': 'zzzz-nao-existe'})
+        self.assertEqual(resposta.status_code, 200)
+        self.assertContains(resposta, 'Nenhum atleta neste filtro')
+
+    def test_player_detail_aninha_time(self):
+        atleta = AtletaCatalogo.objects.filter(nome='Pedro').first()
+        self.assertIsNotNone(atleta)
+        resposta = self.client.get(f'/api/players/{atleta.pk}')
+        self.assertEqual(resposta.status_code, 200)
+        corpo = resposta.json()
+        self.assertEqual(corpo['name'], 'Pedro')
+        self.assertEqual(corpo['team']['name'], 'Flamengo')
+        self.assertIn('photo', corpo)

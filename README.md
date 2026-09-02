@@ -205,8 +205,14 @@ A posição escolhida ainda precisa ter vaga livre na formação do time.
 | `/assets/teams/<arquivo>` | `GET` | Escudo local |
 | `/assets/players/<arquivo>` | `GET` | Foto local |
 | `/api/teams` | `GET` | Clubes em JSON |
+| `/api/teams/<id>` | `GET` | Detalhe do clube |
+| `/api/teams/<id>/logo` | `GET` | Redireciona ao escudo |
 | `/api/players` | `GET` | Jogadores do catálogo em JSON |
+| `/api/players/<id>` | `GET` | Detalhe (time aninhado + foto) |
+| `/api/players/<id>/image` | `GET` | Redireciona à foto |
 | `/api/assets/status` | `GET` | Totais e último sync |
+| `/api/assets/missing` | `GET` | Assets que não estão OK |
+| `/api/sync/status` | `GET` | Relatório do último sync |
 | `/admin/` | `GET` / `POST` | Painel administrativo |
 
 ---
@@ -251,9 +257,16 @@ grava cache local. **Não inventa retrato.**
 - Painel: `/painel/assets/` (o Django Admin já ocupa `/admin/`)
 - CLI: `python sync.py` ou `python manage.py sync_assets`
 - Documentação de origem/licença: [docs/assets.md](docs/assets.md)
-- Na temporada 2026 o Cartola tem devolvido **silhuetas** no campo `foto`;
+- Na temporada 2026 o Cartola devolve **silhuetas** no campo `foto`;
   elas entram como `FALLBACK`. Retratos reais exigem `API_FOOTBALL_KEY` ou
   `SPORTMONKS_TOKEN`.
+- O Cartola 2026 inclui Athletico-PR, Coritiba, Chapecoense e Remo. O seed
+  acadêmico mantém Ceará, Fortaleza, Juventude e Sport; o sync **cria** os
+  quatro clubes da temporada atual para não perder o elenco.
+
+Variáveis (veja `.env.example`): `CARTOLA_BASE_URL` (público), opcionais
+`API_FOOTBALL_KEY` / `SPORTMONKS_TOKEN`, `ASSETS_DIR`, `REQUEST_DELAY`,
+`MAX_RETRIES`. Sem secret o Cartola já sincroniza.
 
 ---
 
@@ -305,7 +318,19 @@ grava cache local. **Não inventa retrato.**
 | `posicao` | CharField(3) | `GOL`, `ZAG`, `LAT`, `MEI` ou `ATA` |
 | `numero` | PositiveSmallInteger | Camisa, quando a API informa |
 | `gols` | PositiveInteger | Gols na temporada (artilharia) |
-| `fonte` | CharField | `local`, `artilharia` ou `escalacao` |
+| `fonte` | CharField | `local`, `cartola`, `artilharia` ou `escalacao` |
+| `fonte_id` | PositiveInteger | ID no Cartola / provider de assets |
+| `foto_status` | CharField | `ok`, `missing`, `invalid` ou `fallback` |
+
+### `Asset`
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `entity_type` / `entity_id` | | `team` ou `player` + ID da fonte |
+| `asset_type` | CharField | `logo` ou `photo` |
+| `url` / `local_path` | | Origem remota e arquivo em `assets/` |
+| `provider` | CharField | Qual fonte resolveu o arquivo |
+| `sha256` / `status` | | Hash do cache e `ok` / `fallback` / `missing` / `invalid` / `error` |
+| `fallback_used` | Boolean | Nunca esconde que o fallback entrou |
 
 ---
 
@@ -373,7 +398,8 @@ python manage.py test futebol
 ```
 
 Cobre o seed do catálogo, filtros de `/atletas/` e `/atletas.json`, o preenchimento
-pelo `catalog_id` no formulário e a sincronização (local e artilharia mockada).
+pelo `catalog_id` no formulário, a sincronização (local e artilharia mockada) e o
+Asset Manager (providers, cache incremental, retry, 404/429/403, painel e API).
 
 ---
 

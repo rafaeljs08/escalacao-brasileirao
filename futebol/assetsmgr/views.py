@@ -4,6 +4,7 @@ import json
 import mimetypes
 from pathlib import Path
 
+from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import FileResponse, Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -161,8 +162,22 @@ def painel_assets(request):
         elif acao == 'missing':
             sincronizar(missing_only=True)
             mensagem = 'Download dos ausentes disparado.'
+        elif acao == 'dry':
+            sincronizar(dry_run=True, stdout=None)
+            mensagem = 'Dry-run concluído — nenhum arquivo foi baixado.'
 
-    atletas = AtletaCatalogo.objects.select_related('clube').order_by('clube__nome', 'nome')[:400]
+    busca = (request.GET.get('q') or '').strip()
+    status = (request.GET.get('status') or '').strip()
+    clube_id = (request.GET.get('clube') or '').strip()
+    qs = AtletaCatalogo.objects.select_related('clube').order_by('clube__nome', 'nome')
+    if busca:
+        qs = qs.filter(nome__icontains=busca)
+    if status:
+        qs = qs.filter(foto_status=status)
+    if clube_id.isdigit():
+        qs = qs.filter(clube_id=int(clube_id))
+    pagina = Paginator(qs, 50).get_page(request.GET.get('page'))
+
     return render(request, 'futebol/assets_painel.html', {
         'mensagem': mensagem,
         'total_clubes': Clube.objects.count(),
@@ -173,5 +188,11 @@ def painel_assets(request):
         'escudos': Clube.objects.exclude(logo_local='').count(),
         'invalidos': Asset.objects.filter(status='invalid').count(),
         'ultimo_sync': _relatorio(),
-        'atletas': atletas,
+        'atletas': pagina,
+        'pagina': pagina,
+        'busca': busca,
+        'status_atual': status,
+        'clube_atual': int(clube_id) if clube_id.isdigit() else '',
+        'clubes': Clube.objects.all(),
+        'status_opcoes': AtletaCatalogo.FOTO_STATUS,
     })

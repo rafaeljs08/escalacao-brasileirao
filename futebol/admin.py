@@ -17,7 +17,7 @@ class NoticiaInline(admin.TabularInline):
 
 @admin.register(Clube)
 class ClubeAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'sigla', 'cidade', 'estado')
+    list_display = ('nome', 'sigla', 'cidade', 'estado', 'fonte_id', 'logo_fonte')
     search_fields = ('nome', 'sigla', 'cidade')
     list_filter = ('estado',)
 
