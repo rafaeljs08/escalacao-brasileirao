@@ -285,7 +285,7 @@ Variáveis (veja `.env.example`): `CARTOLA_BASE_URL` (público), opcionais
 | Campo | Tipo | Descrição |
 |-------|------|-----------|
 | `nome` | CharField(60) | Nome do time |
-| `torcedor` | CharField(60) | Nome do cartoleiro (opcional) |
+| `torcedor` | CharField(60) | Nome do torcedor (opcional) |
 | `formacao` | CharField(10) | Uma das 7 formações disponíveis |
 
 ### `Jogador`

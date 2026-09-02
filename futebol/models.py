@@ -55,7 +55,7 @@ class Escalacao(models.Model):
     FORMACAO_CHOICES = [(chave, chave) for chave in FORMACOES]
 
     nome = models.CharField('Nome do time', max_length=60)
-    torcedor = models.CharField('Cartoleiro', max_length=60, blank=True)
+    torcedor = models.CharField('Torcedor', max_length=60, blank=True)
     formacao = models.CharField(
         'Formação',
         max_length=10,

@@ -7,6 +7,9 @@ class EscalacaoForm(forms.ModelForm):
     class Meta:
         model = Escalacao
         fields = ['nome', 'torcedor', 'formacao']
+        labels = {
+            'torcedor': 'Torcedor',
+        }
         widgets = {
             'nome': forms.TextInput(attrs={'placeholder': 'Ex.: Seleção dos Sonhos'}),
             'torcedor': forms.TextInput(attrs={'placeholder': 'Seu nome (opcional)'}),
