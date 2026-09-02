@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Clube, Escalacao, Jogador, Noticia
+from .models import AtletaCatalogo, Clube, Escalacao, Jogador, Noticia
 
 
 class JogadorInline(admin.TabularInline):
@@ -43,3 +43,10 @@ class NoticiaAdmin(admin.ModelAdmin):
     list_display = ('titulo', 'jogador', 'data_publicacao')
     list_filter = ('data_publicacao',)
     search_fields = ('titulo', 'resumo', 'jogador__nome')
+
+
+@admin.register(AtletaCatalogo)
+class AtletaCatalogoAdmin(admin.ModelAdmin):
+    list_display = ('nome', 'clube', 'posicao', 'numero', 'gols', 'fonte')
+    list_filter = ('posicao', 'clube', 'fonte')
+    search_fields = ('nome', 'clube__nome', 'clube__sigla')

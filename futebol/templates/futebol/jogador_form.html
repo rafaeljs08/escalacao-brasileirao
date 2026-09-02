@@ -1,6 +1,11 @@
 {% extends 'futebol/base.html' %}
+{% load static %}
 
 {% block titulo %}{{ titulo }}{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'futebol/js/catalogo.js' %}" defer></script>
+{% endblock %}
 
 {% block conteudo %}
 <div class="form-wrap">
@@ -9,14 +14,34 @@
             <span class="eyebrow">{{ escalacao.nome }} · {{ escalacao.formacao }}</span>
             <h1>{{ titulo }}</h1>
             <p class="page-head__sub">
-                Escolha qualquer clube da Série A. A posição precisa ter vaga livre na formação
-                atual do time.
+                Busque um jogador do Brasileirão ou cadastre na mão. A posição precisa
+                ter vaga livre na formação atual do time.
             </p>
         </div>
     </div>
 
     <form method="post" class="card" novalidate>
         {% csrf_token %}
+
+        <div class="catalogo-picker"
+             data-catalogo-url="{% url 'futebol_catalogo_json' %}"
+             data-posicao="{{ posicao_inicial }}">
+            <label for="catalogo-busca">Buscar no elenco da Série A</label>
+            <input type="search" id="catalogo-busca" name="catalogo_busca" autocomplete="off"
+                   placeholder="Ex.: Arrascaeta, Vegetti, Weverton…"
+                   {% if total_catalogo == 0 %}disabled{% endif %}>
+            <p class="campo-form__ajuda" data-catalogo-escolhido>
+                {% if total_catalogo %}
+                    {{ total_catalogo }} atletas no catálogo.
+                    <a href="{% url 'futebol_atletas' %}">Ver lista completa</a>
+                {% else %}
+                    Catálogo vazio. Rode <code>python manage.py seed_brasileirao</code>
+                    ou <code>python manage.py sync_api_futebol</code>.
+                {% endif %}
+            </p>
+            <div id="catalogo-resultados" class="catalogo-lista" hidden></div>
+        </div>
+
         {% include 'futebol/_campo_form.html' %}
 
         <div class="form-acoes">

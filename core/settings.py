@@ -81,3 +81,16 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Chave em https://dash.api-futebol.com.br — o app funciona sem ela (catálogo local).
+_env_file = BASE_DIR / '.env'
+if _env_file.exists():
+    for _linha in _env_file.read_text(encoding='utf-8').splitlines():
+        _linha = _linha.strip()
+        if not _linha or _linha.startswith('#') or '=' not in _linha:
+            continue
+        _chave, _, _valor = _linha.partition('=')
+        os.environ.setdefault(_chave.strip(), _valor.strip().strip('"').strip("'"))
+
+API_FUTEBOL_KEY = os.environ.get('API_FUTEBOL_KEY', '').strip()
+API_FUTEBOL_CAMPEONATO_ID = int(os.environ.get('API_FUTEBOL_CAMPEONATO_ID', '10'))

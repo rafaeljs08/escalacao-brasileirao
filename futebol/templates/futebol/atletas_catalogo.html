@@ -1,0 +1,97 @@
+{% extends 'futebol/base.html' %}
+{% load static %}
+
+{% block titulo %}Jogadores da Série A{% endblock %}
+
+{% block conteudo %}
+<div class="page-head">
+    <div>
+        <span class="eyebrow">Catálogo · Brasileirão Série A</span>
+        <h1>Jogadores para escalar</h1>
+        <p class="page-head__sub">
+            Elenco de referência dos 20 clubes. Sem chave da API Futebol o app usa
+            o catálogo local; com <code>API_FUTEBOL_KEY</code>, a artilharia oficial
+            entra no mesmo cadastro.
+        </p>
+    </div>
+    <a href="{% url 'futebol' %}" class="btn btn--secundario">Voltar aos times</a>
+</div>
+
+<form method="get" class="filtros card" role="search">
+    <div class="campo-form">
+        <label for="id_q">Nome</label>
+        <input type="search" id="id_q" name="q" value="{{ busca }}" placeholder="Buscar jogador">
+    </div>
+    <div class="campo-form">
+        <label for="id_clube">Clube</label>
+        <select id="id_clube" name="clube">
+            <option value="">Todos os clubes</option>
+            {% for clube in clubes %}
+            <option value="{{ clube.pk }}"{% if clube_atual and clube.pk == clube_atual.pk %} selected{% endif %}>
+                {{ clube.nome }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="campo-form">
+        <label for="id_posicao">Posição</label>
+        <select id="id_posicao" name="posicao">
+            <option value="">Todas</option>
+            {% for sigla, label in posicoes %}
+            <option value="{{ sigla }}"{% if posicao_atual == sigla %} selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="filtros__acoes">
+        <button type="submit" class="btn btn--primario">Filtrar</button>
+        <a href="{% url 'futebol_atletas' %}" class="btn btn--secundario">Limpar</a>
+    </div>
+</form>
+
+<p class="catalogo-resumo">{{ total }} atleta{{ total|pluralize:"s" }} encontrado{{ total|pluralize:"s" }}.</p>
+
+{% if agrupados %}
+{% for grupo in agrupados %}
+<section class="catalogo-clube card">
+    <header class="catalogo-clube__topo">
+        {% if grupo.clube.escudo %}
+        <img src="{% static grupo.clube.escudo %}" alt="" class="elenco-item__escudo">
+        {% endif %}
+        <div>
+            <h2>{{ grupo.clube.nome }}</h2>
+            <p class="elenco-item__sub">{{ grupo.clube.sigla }} · {{ grupo.atletas|length }} jogador{{ grupo.atletas|length|pluralize:"es" }}</p>
+        </div>
+    </header>
+    <ul class="catalogo-elenco">
+        {% for atleta in grupo.atletas %}
+        <li>
+            <span class="badge-pos badge-pos--{{ atleta.posicao|lower }}">{{ atleta.posicao }}</span>
+            <span class="elenco-item__nome">{{ atleta.nome }}</span>
+            <span class="elenco-item__sub">
+                {% if atleta.numero %}#{{ atleta.numero }} · {% endif %}{{ atleta.gols }} gol{{ atleta.gols|pluralize:"s" }}
+                · {{ atleta.get_fonte_display }}
+            </span>
+        </li>
+        {% endfor %}
+    </ul>
+</section>
+{% endfor %}
+{% elif busca or clube_atual or posicao_atual %}
+<div class="vazio">
+    <div class="vazio__icone">🔎</div>
+    <h3>Nenhum jogador com esse filtro</h3>
+    <p>Tente outro nome, clube ou posição — ou limpe os filtros para ver o catálogo inteiro.</p>
+    <a href="{% url 'futebol_atletas' %}" class="btn btn--primario">Limpar filtros</a>
+</div>
+{% else %}
+<div class="vazio">
+    <div class="vazio__icone">📋</div>
+    <h3>Catálogo ainda vazio</h3>
+    <p>
+        Rode <code>python manage.py seed_brasileirao</code> para carregar o elenco local
+        ou configure <code>API_FUTEBOL_KEY</code> e execute
+        <code>python manage.py sync_api_futebol</code>.
+    </p>
+</div>
+{% endif %}
+{% endblock %}

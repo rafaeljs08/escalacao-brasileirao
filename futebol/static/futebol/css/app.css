@@ -602,6 +602,150 @@ a { color: inherit; }
 
 .vazio .btn { margin-top: 1.4rem; }
 
+/* ── Catálogo de atletas ──────────────────────────────────────────────── */
+
+.catalogo-picker {
+    display: grid;
+    gap: 0.45rem;
+    margin-bottom: 1.35rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--borda);
+}
+
+.catalogo-picker label {
+    font-size: 0.8rem;
+    font-weight: 650;
+    letter-spacing: 0.02em;
+    color: var(--texto-suave);
+}
+
+.catalogo-picker input[type="search"] {
+    width: 100%;
+    padding: 0.72rem 0.9rem;
+    border: 1px solid var(--borda-forte);
+    border-radius: var(--raio-sm);
+    background: rgba(0, 0, 0, 0.34);
+    color: var(--texto);
+    font-family: var(--fonte-texto);
+    font-size: 0.92rem;
+}
+
+.catalogo-picker input[type="search"]:focus {
+    outline: none;
+    border-color: var(--verde);
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.16);
+}
+
+.catalogo-picker a { color: #86efac; }
+
+.catalogo-lista {
+    display: grid;
+    max-height: 240px;
+    overflow: auto;
+    border: 1px solid var(--borda);
+    border-radius: var(--raio-sm);
+    background: rgba(0, 0, 0, 0.35);
+}
+
+.catalogo-item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.35rem 1rem;
+    width: 100%;
+    padding: 0.7rem 0.9rem;
+    border: 0;
+    border-bottom: 1px solid var(--borda);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.catalogo-item:last-child { border-bottom: 0; }
+
+.catalogo-item:hover,
+.catalogo-item:focus {
+    background: rgba(34, 197, 94, 0.12);
+    outline: none;
+}
+
+.catalogo-item__nome { font-weight: 650; }
+
+.catalogo-item__meta {
+    color: var(--texto-fraco);
+    font-size: 0.78rem;
+}
+
+.filtros {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 0.8fr auto;
+    gap: 0.9rem;
+    align-items: end;
+    margin-bottom: 1.2rem;
+}
+
+.filtros__acoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.catalogo-resumo {
+    margin: 0 0 1rem;
+    color: var(--texto-fraco);
+    font-size: 0.84rem;
+}
+
+.catalogo-clube { margin-bottom: 1rem; }
+
+.catalogo-clube__topo {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 0.85rem;
+}
+
+.catalogo-clube__topo h2 { font-size: 1.05rem; }
+
+.catalogo-elenco {
+    display: grid;
+    gap: 0.45rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.catalogo-elenco li {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.55rem 0.15rem;
+    border-bottom: 1px solid var(--borda);
+}
+
+.catalogo-elenco li:last-child { border-bottom: 0; }
+
+code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.84em;
+    color: #bbf7d0;
+}
+
+@media (max-width: 860px) {
+    .filtros { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 680px) {
+    .catalogo-elenco li {
+        grid-template-columns: auto 1fr;
+    }
+    .catalogo-elenco .elenco-item__sub { grid-column: 2; }
+}
+
 /* ── Rodapé ────────────────────────────────────────────────────────────── */
 
 .rodape {

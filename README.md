@@ -34,6 +34,8 @@ Projeto desenvolvido para a disciplina **Programação Backend (Python/Django)**
 | **Times** | Crie quantos times quiser, cada um com nome, cartoleiro e formação |
 | **7 formações** | `3-4-3`, `3-5-2`, `4-3-3`, `4-4-2`, `4-5-1`, `5-3-2` e `5-4-1` |
 | **20 clubes** | Todos os clubes da Série A, com escudo, sigla e cores próprias |
+| **Catálogo de jogadores** | Busca no elenco da Série A ao escalar; lista completa em `/atletas/` |
+| **API Futebol** | Com chave, sincroniza a artilharia oficial do Brasileirão |
 | **Campo interativo** | Vagas livres são clicáveis e já abrem o formulário na posição certa |
 | **Estatísticas** | Gols, assistências e posse de bola por atleta, com totais do time |
 | **Notícias** | Publique notícias vinculadas a cada jogador |
@@ -98,13 +100,18 @@ pip install -r requirements.txt
 # 4. Aplique as migrações
 python manage.py migrate
 
-# 5. Cadastre os 20 clubes, gere os escudos e crie um time de exemplo
+# 5. Cadastre os 20 clubes, o catálogo de jogadores, os escudos e um time de exemplo
 python manage.py seed_brasileirao
 
-# 6. (Opcional) Crie um superusuário para acessar o admin
+# 6. (Opcional) Sincronize a artilharia oficial da API Futebol
+#    Cadastre a chave em https://dash.api-futebol.com.br/cadastrar
+cp .env.example .env   # edite API_FUTEBOL_KEY
+python manage.py sync_api_futebol
+
+# 7. (Opcional) Crie um superusuário para acessar o admin
 python manage.py createsuperuser
 
-# 7. Inicie o servidor
+# 8. Inicie o servidor
 python manage.py runserver
 ```
 
@@ -125,7 +132,40 @@ Acesse **http://127.0.0.1:8000/**
 | `/time/<id>/jogador/<id>/editar/` | `GET` / `POST` | Edita um jogador |
 | `/time/<id>/jogador/<id>/excluir/` | `GET` / `POST` | Remove um jogador |
 | `/time/<id>/jogador/<id>/noticia/nova/` | `GET` / `POST` | Publica uma notícia |
+| `/atletas/` | `GET` | Catálogo de jogadores da Série A, com filtro por clube e posição |
+| `/atletas.json` | `GET` | JSON usado pela busca no formulário de escalação |
 | `/admin/` | `GET` / `POST` | Painel administrativo |
+
+---
+
+## 🔌 API Futebol
+
+A lista oficial de atletas vem de [API Futebol](https://www.api-futebol.com.br/documentacao)
+(`https://api.api-futebol.com.br/v1`). Toda chamada exige o header
+`Authorization: Bearer SUA_API_KEY`. Sem a chave o app **não quebra**: o comando
+`seed_brasileirao` já carrega um catálogo local dos 20 clubes da Série A.
+
+A API **não publica elenco completo** de cada time no plano comum. O que dá para
+puxar de verdade:
+
+| Endpoint | O que entra no catálogo |
+|----------|-------------------------|
+| `GET /campeonatos/10/artilharia` | Goleadores da Série A (nome, clube, posição, gols) |
+| `GET /partidas/{id}` | Titulares e reservas da rodada (`--com-escalacoes`) |
+
+```bash
+# Só o catálogo local (não precisa de chave)
+python manage.py sync_api_futebol
+
+# Artilharia oficial (gasta 1 requisição)
+API_FUTEBOL_KEY=live_xxx python manage.py sync_api_futebol
+
+# Artilharia + escalações da última rodada (várias requisições)
+API_FUTEBOL_KEY=live_xxx python manage.py sync_api_futebol --com-escalacoes
+```
+
+A chave fica em variável de ambiente ou no arquivo `.env` (veja `.env.example`).
+Nunca coloque a chave no frontend: as chamadas saem só do `manage.py`.
 
 ---
 
@@ -168,6 +208,17 @@ Acesse **http://127.0.0.1:8000/**
 | `resumo` | TextField(400) | Texto da notícia |
 | `data_publicacao` | DateField | Preenchida automaticamente |
 
+### `AtletaCatalogo`
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `api_id` | PositiveInteger | ID do atleta na API Futebol (opcional) |
+| `nome` | CharField(80) | Nome popular |
+| `clube` | ForeignKey | Clube da Série A |
+| `posicao` | CharField(3) | `GOL`, `ZAG`, `LAT`, `MEI` ou `ATA` |
+| `numero` | PositiveSmallInteger | Camisa, quando a API informa |
+| `gols` | PositiveInteger | Gols na temporada (artilharia) |
+| `fonte` | CharField | `local`, `artilharia` ou `escalacao` |
+
 ---
 
 ## 🎨 Interface
@@ -201,16 +252,21 @@ escalacao-brasileirao/
 │   ├── settings.py
 │   └── urls.py
 └── futebol/                       # App da escalação
-    ├── models.py                  # Clube, Escalacao, Jogador, Noticia
+    ├── models.py                  # Clube, Escalacao, Jogador, Noticia, AtletaCatalogo
+    ├── catalogo.py                # Importação local e da API Futebol
     ├── forms.py                   # Validação de vagas por formação
-    ├── views.py                   # CRUD e montagem do campo
+    ├── views.py                   # CRUD, campo e catálogo
     ├── urls.py
     ├── admin.py
+    ├── data/catalogo_local.py     # Elenco de fallback (sem chave)
+    ├── services/api_futebol.py    # Cliente HTTPS da API Futebol
     ├── management/commands/
-    │   └── seed_brasileirao.py    # Clubes, escudos e time de exemplo
+    │   ├── seed_brasileirao.py    # Clubes, escudos, catálogo e time de exemplo
+    │   └── sync_api_futebol.py    # Artilharia / escalações oficiais
     ├── static/futebol/
     │   ├── css/app.css            # Design system
     │   ├── css/campo.css          # Campo de futebol
+    │   ├── js/catalogo.js         # Busca de jogadores no formulário
     │   └── img/clubes/            # Escudos SVG
     └── templates/futebol/
 ```
@@ -223,6 +279,7 @@ escalacao-brasileirao/
 |------------|-----|
 | **Python 3.11+** | Linguagem |
 | **Django 5.2** | Framework web |
+| **requests** | Cliente HTTP da API Futebol |
 | **SQLite** | Banco de dados |
 | **HTML + CSS** | Interface, sem dependência de framework front-end |
 

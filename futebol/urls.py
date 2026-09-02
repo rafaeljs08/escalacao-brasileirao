@@ -17,4 +17,6 @@ urlpatterns = [
         views.noticia_excluir,
         name='futebol_noticia_excluir',
     ),
+    path('atletas/', views.atletas_catalogo, name='futebol_atletas'),
+    path('atletas.json', views.catalogo_json, name='futebol_catalogo_json'),
 ]

@@ -153,6 +153,41 @@ class Jogador(models.Model):
         return self.gols + self.assistencias
 
 
+class AtletaCatalogo(models.Model):
+    """Jogador da Série A disponível para escalar, vindo da API ou do catálogo local."""
+
+    FONTE_CHOICES = [
+        ('local', 'Catálogo local'),
+        ('artilharia', 'Artilharia (API Futebol)'),
+        ('escalacao', 'Escalação de partida (API Futebol)'),
+    ]
+
+    api_id = models.PositiveIntegerField('ID na API Futebol', unique=True, null=True, blank=True)
+    nome = models.CharField('Nome', max_length=80)
+    clube = models.ForeignKey(
+        Clube,
+        on_delete=models.CASCADE,
+        related_name='catalogo',
+        verbose_name='Clube',
+    )
+    posicao = models.CharField('Posição', max_length=3, choices=Jogador.POSICAO_CHOICES)
+    numero = models.PositiveSmallIntegerField('Camisa', null=True, blank=True)
+    gols = models.PositiveIntegerField('Gols', default=0)
+    fonte = models.CharField('Origem', max_length=20, choices=FONTE_CHOICES, default='local')
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['nome']
+        verbose_name = 'Atleta do catálogo'
+        verbose_name_plural = 'Catálogo de atletas'
+        constraints = [
+            models.UniqueConstraint(fields=['nome', 'clube'], name='catalogo_nome_clube_unico'),
+        ]
+
+    def __str__(self):
+        return f'{self.nome} ({self.clube.sigla})'
+
+
 class Noticia(models.Model):
     jogador = models.ForeignKey(
         Jogador,

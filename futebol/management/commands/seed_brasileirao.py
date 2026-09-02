@@ -3,7 +3,8 @@ from pathlib import Path
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
-from futebol.models import Clube, Escalacao, Jogador
+from futebol.catalogo import carregar_catalogo_local
+from futebol.models import AtletaCatalogo, Clube, Escalacao, Jogador
 
 # nome, sigla, cidade, UF, cor primária, cor secundária
 CLUBES = [
@@ -109,6 +110,11 @@ class Command(BaseCommand):
             )
 
         self.stdout.write(self.style.SUCCESS(f'{Clube.objects.count()} clubes da Série A disponíveis.'))
+
+        atletas = carregar_catalogo_local()
+        self.stdout.write(self.style.SUCCESS(
+            f'Catálogo local: {atletas} atletas novos ({AtletaCatalogo.objects.count()} no total).'
+        ))
 
         if options['sem_demo'] or Escalacao.objects.exists():
             return

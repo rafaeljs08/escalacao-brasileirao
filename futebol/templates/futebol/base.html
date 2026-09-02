@@ -22,6 +22,7 @@
             </a>
             <nav class="topbar__links">
                 <a href="{% url 'futebol' %}" class="topbar__link">Meus times</a>
+                <a href="{% url 'futebol_atletas' %}" class="topbar__link">Jogadores</a>
                 <a href="{% url 'futebol_time_criar' %}" class="topbar__link">Novo time</a>
                 <a href="{% url 'admin:index' %}" class="topbar__link">Admin</a>
             </nav>
@@ -44,5 +45,6 @@
             <strong>Programação Backend</strong> · Python/Django
         </footer>
     </main>
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

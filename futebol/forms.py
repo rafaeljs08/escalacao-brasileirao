@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Escalacao, Jogador, Noticia
+from .models import AtletaCatalogo, Escalacao, Jogador, Noticia
 
 
 class EscalacaoForm(forms.ModelForm):
@@ -14,6 +14,8 @@ class EscalacaoForm(forms.ModelForm):
 
 
 class JogadorForm(forms.ModelForm):
+    catalog_id = forms.IntegerField(required=False, widget=forms.HiddenInput())
+
     class Meta:
         model = Jogador
         fields = [
@@ -29,6 +31,26 @@ class JogadorForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.escalacao = escalacao
         self.fields['clube'].empty_label = 'Selecione o clube'
+        self._aplicar_catalogo_no_post()
+
+    def _aplicar_catalogo_no_post(self):
+        if not self.data:
+            return
+        bruto = self.data.get('catalog_id')
+        if not bruto:
+            return
+        try:
+            catalogo = AtletaCatalogo.objects.select_related('clube').get(pk=int(bruto))
+        except (AtletaCatalogo.DoesNotExist, TypeError, ValueError):
+            return
+        dados = self.data.copy()
+        dados['nome'] = catalogo.nome[:60]
+        dados['clube'] = str(catalogo.clube_id)
+        dados['posicao'] = catalogo.posicao
+        if catalogo.numero:
+            dados['numero'] = str(catalogo.numero)
+        dados['gols'] = str(catalogo.gols)
+        self.data = dados
 
     def clean_posicao(self):
         posicao = self.cleaned_data['posicao']

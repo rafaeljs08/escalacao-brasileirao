@@ -1,9 +1,10 @@
 from django.contrib import messages
 from django.db.models import Prefetch
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import EscalacaoForm, JogadorForm, NoticiaForm
-from .models import Clube, Escalacao, Jogador, Noticia
+from .models import AtletaCatalogo, Clube, Escalacao, Jogador, Noticia
 
 POSICAO_LABEL = dict(Jogador.POSICAO_CHOICES)
 
@@ -59,6 +60,7 @@ def escalacao_lista(request):
     return render(request, 'futebol/escalacao_lista.html', {
         'escalacoes': escalacoes,
         'total_clubes': Clube.objects.count(),
+        'total_catalogo': AtletaCatalogo.objects.count(),
     })
 
 
@@ -140,6 +142,8 @@ def jogador_criar(request, pk):
         'escalacao': escalacao,
         'titulo': 'Escalar jogador',
         'acao': 'Escalar jogador',
+        'posicao_inicial': posicao if posicao in POSICAO_LABEL else '',
+        'total_catalogo': AtletaCatalogo.objects.count(),
     })
 
 
@@ -159,6 +163,8 @@ def jogador_editar(request, pk, jogador_pk):
         'jogador': jogador,
         'titulo': 'Editar jogador',
         'acao': 'Salvar alterações',
+        'posicao_inicial': jogador.posicao,
+        'total_catalogo': AtletaCatalogo.objects.count(),
     })
 
 
@@ -212,3 +218,63 @@ def noticia_excluir(request, pk, jogador_pk, noticia_pk):
         'descricao': f'A notícia "{noticia.titulo}" será removida.',
         'voltar_url': escalacao.get_absolute_url(),
     })
+
+
+def _filtrar_catalogo(request, ordenacao=('-gols', 'nome')):
+    qs = AtletaCatalogo.objects.select_related('clube').order_by(*ordenacao)
+    clube_id = request.GET.get('clube')
+    if clube_id:
+        qs = qs.filter(clube_id=clube_id)
+    posicao = request.GET.get('posicao')
+    if posicao in POSICAO_LABEL:
+        qs = qs.filter(posicao=posicao)
+    busca = (request.GET.get('q') or '').strip()
+    if busca:
+        qs = qs.filter(nome__icontains=busca)
+    return qs, busca
+
+
+def atletas_catalogo(request):
+    qs, busca = _filtrar_catalogo(request, ('clube__nome', '-gols', 'nome'))
+    atletas = list(qs)
+    clube_id = request.GET.get('clube')
+    posicao = request.GET.get('posicao') if request.GET.get('posicao') in POSICAO_LABEL else ''
+    clubes = Clube.objects.all()
+    clube_atual = clubes.filter(pk=clube_id).first() if clube_id else None
+
+    agrupados = []
+    atual = None
+    for atleta in atletas:
+        if atual is None or atual['clube'].pk != atleta.clube_id:
+            atual = {'clube': atleta.clube, 'atletas': []}
+            agrupados.append(atual)
+        atual['atletas'].append(atleta)
+
+    return render(request, 'futebol/atletas_catalogo.html', {
+        'agrupados': agrupados,
+        'total': len(atletas),
+        'clubes': clubes,
+        'clube_atual': clube_atual,
+        'posicao_atual': posicao,
+        'busca': busca,
+        'posicoes': Jogador.POSICAO_CHOICES,
+    })
+
+
+def catalogo_json(request):
+    atletas, _busca = _filtrar_catalogo(request)
+    payload = [
+        {
+            'id': atleta.pk,
+            'nome': atleta.nome,
+            'clube_id': atleta.clube_id,
+            'clube': atleta.clube.sigla,
+            'clube_nome': atleta.clube.nome,
+            'posicao': atleta.posicao,
+            'posicao_label': POSICAO_LABEL[atleta.posicao],
+            'numero': atleta.numero,
+            'gols': atleta.gols,
+        }
+        for atleta in atletas[:80]
+    ]
+    return JsonResponse({'atletas': payload, 'total': len(payload)})
