@@ -6,6 +6,7 @@ from django.test import TestCase, override_settings
 
 from futebol.catalogo import importar_artilharia, importar_escalacao
 from futebol.models import AtletaCatalogo, Clube, Escalacao, Jogador
+from futebol.posicoes import resolver_funcao
 from futebol.services.api_futebol import (
     atletas_da_escalacao,
     mapear_posicao,
@@ -22,6 +23,12 @@ class MapeamentoApiTests(TestCase):
         self.assertEqual(mapear_posicao('LAE'), 'LAT')
         self.assertEqual(mapear_posicao('VOL'), 'MEI')
         self.assertEqual(mapear_posicao(''), 'MEI')
+
+    def test_funcao_pesquisada(self):
+        self.assertEqual(resolver_funcao('Arrascaeta', 'FLA', 'MEI'), 'MAT')
+        self.assertEqual(resolver_funcao('Pedro', 'FLA', 'ATA'), 'CA')
+        self.assertEqual(resolver_funcao('Wesley', 'FLA', 'LAT'), 'LD')
+        self.assertEqual(resolver_funcao('Jogador Desconhecido', 'FLA', 'ZAG'), 'ZAG')
 
     def test_siglas_dos_clubes_do_seed(self):
         self.assertEqual(mapear_sigla_clube('RBB'), 'BGT')
@@ -59,6 +66,21 @@ class CatalogoTests(TestCase):
         self.assertGreaterEqual(dados['total'], 1)
         self.assertEqual(dados['atletas'][0]['nome'], 'Arrascaeta')
         self.assertEqual(dados['atletas'][0]['posicao'], 'MEI')
+        self.assertEqual(dados['atletas'][0]['funcao'], 'MAT')
+
+    def test_filtro_por_funcao_tatica(self):
+        resposta = self.client.get('/atletas/', {'funcao': 'CA'})
+        self.assertEqual(resposta.status_code, 200)
+        self.assertContains(resposta, 'Pedro')
+        self.assertContains(resposta, 'Centroavante')
+
+    def test_formulario_de_elenco_tem_filtro_de_funcao(self):
+        time = Escalacao.objects.create(nome='Teste funções', formacao='4-3-3')
+        resposta = self.client.get(f'/time/{time.pk}/jogador/novo/?posicao=ATA')
+        self.assertEqual(resposta.status_code, 200)
+        self.assertContains(resposta, 'Função tática')
+        self.assertContains(resposta, 'catalogo-funcao')
+        self.assertContains(resposta, 'Centroavante')
 
     def test_escalar_pelo_catalogo(self):
         time = Escalacao.objects.create(nome='Teste API', formacao='4-3-3')

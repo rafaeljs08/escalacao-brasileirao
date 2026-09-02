@@ -30,6 +30,35 @@
             <input type="search" id="catalogo-busca" name="catalogo_busca" autocomplete="off"
                    placeholder="Ex.: Arrascaeta, Vegetti, Weverton…"
                    {% if total_catalogo == 0 %}disabled{% endif %}>
+            <div class="catalogo-picker__filtros">
+                <div class="campo-form">
+                    <label for="catalogo-clube">Clube</label>
+                    <select id="catalogo-clube">
+                        <option value="">Todos</option>
+                        {% for clube in clubes %}
+                        <option value="{{ clube.pk }}">{{ clube.sigla }} — {{ clube.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="campo-form">
+                    <label for="catalogo-posicao">Setor</label>
+                    <select id="catalogo-posicao">
+                        <option value="">Todos</option>
+                        {% for sigla, label in posicoes %}
+                        <option value="{{ sigla }}"{% if posicao_inicial == sigla %} selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="campo-form">
+                    <label for="catalogo-funcao">Função tática</label>
+                    <select id="catalogo-funcao">
+                        <option value="">Todas</option>
+                        {% for sigla, label in funcoes %}
+                        <option value="{{ sigla }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
             <p class="campo-form__ajuda" data-catalogo-escolhido>
                 {% if total_catalogo %}
                     {{ total_catalogo }} atletas no catálogo.

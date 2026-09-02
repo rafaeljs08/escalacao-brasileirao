@@ -5,8 +5,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import EscalacaoForm, JogadorForm, NoticiaForm
 from .models import AtletaCatalogo, Clube, Escalacao, Jogador, Noticia
-
-POSICAO_LABEL = dict(Jogador.POSICAO_CHOICES)
+from .posicoes import FUNCAO_CHOICES, FUNCAO_LABEL, POSICAO_LABEL
 
 
 def _escalacao_completa(pk):
@@ -144,6 +143,9 @@ def jogador_criar(request, pk):
         'acao': 'Escalar jogador',
         'posicao_inicial': posicao if posicao in POSICAO_LABEL else '',
         'total_catalogo': AtletaCatalogo.objects.count(),
+        'clubes': Clube.objects.all(),
+        'posicoes': Jogador.POSICAO_CHOICES,
+        'funcoes': FUNCAO_CHOICES,
     })
 
 
@@ -165,6 +167,9 @@ def jogador_editar(request, pk, jogador_pk):
         'acao': 'Salvar alterações',
         'posicao_inicial': jogador.posicao,
         'total_catalogo': AtletaCatalogo.objects.count(),
+        'clubes': Clube.objects.all(),
+        'posicoes': Jogador.POSICAO_CHOICES,
+        'funcoes': FUNCAO_CHOICES,
     })
 
 
@@ -228,6 +233,9 @@ def _filtrar_catalogo(request, ordenacao=('-gols', 'nome')):
     posicao = request.GET.get('posicao')
     if posicao in POSICAO_LABEL:
         qs = qs.filter(posicao=posicao)
+    funcao = request.GET.get('funcao')
+    if funcao in FUNCAO_LABEL:
+        qs = qs.filter(funcao=funcao)
     busca = (request.GET.get('q') or '').strip()
     if busca:
         qs = qs.filter(nome__icontains=busca)
@@ -239,6 +247,7 @@ def atletas_catalogo(request):
     atletas = list(qs)
     clube_id = request.GET.get('clube')
     posicao = request.GET.get('posicao') if request.GET.get('posicao') in POSICAO_LABEL else ''
+    funcao = request.GET.get('funcao') if request.GET.get('funcao') in FUNCAO_LABEL else ''
     clubes = Clube.objects.all()
     clube_atual = clubes.filter(pk=clube_id).first() if clube_id else None
 
@@ -256,8 +265,10 @@ def atletas_catalogo(request):
         'clubes': clubes,
         'clube_atual': clube_atual,
         'posicao_atual': posicao,
+        'funcao_atual': funcao,
         'busca': busca,
         'posicoes': Jogador.POSICAO_CHOICES,
+        'funcoes': FUNCAO_CHOICES,
     })
 
 
@@ -271,7 +282,9 @@ def catalogo_json(request):
             'clube': atleta.clube.sigla,
             'clube_nome': atleta.clube.nome,
             'posicao': atleta.posicao,
-            'posicao_label': POSICAO_LABEL[atleta.posicao],
+            'posicao_label': POSICAO_LABEL.get(atleta.posicao, atleta.posicao),
+            'funcao': atleta.funcao or atleta.posicao,
+            'funcao_label': atleta.funcao_rotulo(),
             'numero': atleta.numero,
             'gols': atleta.gols,
             'foto': atleta.foto_publica(),

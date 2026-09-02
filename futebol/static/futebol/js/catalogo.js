@@ -6,6 +6,9 @@
     const busca = document.getElementById("catalogo-busca");
     const lista = document.getElementById("catalogo-resultados");
     const aviso = root.querySelector("[data-catalogo-escolhido]");
+    const filtroClube = document.getElementById("catalogo-clube");
+    const filtroPosicao = document.getElementById("catalogo-posicao");
+    const filtroFuncao = document.getElementById("catalogo-funcao");
     const form = root.closest("form");
     const posicaoInicial = root.getAttribute("data-posicao") || "";
     let timer = null;
@@ -28,13 +31,14 @@
         set("nome", atleta.nome);
         set("clube", atleta.clube_id);
         set("posicao", atleta.posicao);
+        set("funcao", atleta.funcao || atleta.posicao);
         if (atleta.numero) set("numero", atleta.numero);
         set("gols", atleta.gols);
         lista.hidden = true;
         lista.innerHTML = "";
         busca.value = atleta.nome;
         if (aviso) {
-            aviso.textContent = atleta.nome + " · " + atleta.clube_nome + " · " + atleta.posicao_label;
+            aviso.textContent = atleta.nome + " · " + atleta.clube_nome + " · " + (atleta.funcao_label || atleta.posicao_label);
         }
     }
 
@@ -47,10 +51,11 @@
         }
         lista.hidden = false;
         lista.innerHTML = items.map(function (a) {
+            const funcao = a.funcao_label || a.posicao_label || a.posicao;
             return (
                 '<button type="button" class="catalogo-item" data-id="' + a.id + '">' +
                 '<span class="catalogo-item__nome">' + a.nome + "</span>" +
-                '<span class="catalogo-item__meta">' + a.clube + " · " + a.posicao + " · " + a.gols + " gols</span>" +
+                '<span class="catalogo-item__meta">' + a.clube + " · " + funcao + " · " + a.gols + " gols</span>" +
                 "</button>"
             );
         }).join("");
@@ -66,8 +71,12 @@
         const params = new URLSearchParams();
         const q = busca.value.trim();
         if (q) params.set("q", q);
-        const posicao = (campo("posicao") && campo("posicao").value) || posicaoInicial;
+        const clube = filtroClube && filtroClube.value;
+        if (clube) params.set("clube", clube);
+        const posicao = (filtroPosicao && filtroPosicao.value) || posicaoInicial;
         if (posicao) params.set("posicao", posicao);
+        const funcao = filtroFuncao && filtroFuncao.value;
+        if (funcao) params.set("funcao", funcao);
         lista.hidden = false;
         lista.innerHTML = '<p class="campo-form__ajuda">Buscando…</p>';
         fetch(url + "?" + params.toString(), { headers: { Accept: "application/json" } })
@@ -87,4 +96,7 @@
         timer = setTimeout(consultar, 180);
     });
     busca.addEventListener("focus", consultar);
+    [filtroClube, filtroPosicao, filtroFuncao].forEach(function (el) {
+        if (el) el.addEventListener("change", consultar);
+    });
 })();

@@ -6,7 +6,7 @@ from .models import Asset, AtletaCatalogo, Clube, Escalacao, Jogador, Noticia
 class JogadorInline(admin.TabularInline):
     model = Jogador
     extra = 0
-    fields = ('nome', 'clube', 'posicao', 'numero', 'gols', 'assistencias', 'posse_bola', 'capitao')
+    fields = ('nome', 'clube', 'posicao', 'funcao', 'numero', 'gols', 'assistencias', 'posse_bola', 'capitao')
 
 
 class NoticiaInline(admin.TabularInline):
@@ -32,8 +32,8 @@ class EscalacaoAdmin(admin.ModelAdmin):
 
 @admin.register(Jogador)
 class JogadorAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'clube', 'posicao', 'numero', 'gols', 'assistencias', 'escalacao')
-    list_filter = ('posicao', 'clube', 'escalacao')
+    list_display = ('nome', 'clube', 'posicao', 'funcao', 'numero', 'gols', 'assistencias', 'escalacao')
+    list_filter = ('posicao', 'funcao', 'clube', 'escalacao')
     search_fields = ('nome',)
     inlines = [NoticiaInline]
 
@@ -47,8 +47,8 @@ class NoticiaAdmin(admin.ModelAdmin):
 
 @admin.register(AtletaCatalogo)
 class AtletaCatalogoAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'clube', 'posicao', 'numero', 'gols', 'fonte', 'foto_status')
-    list_filter = ('posicao', 'clube', 'fonte', 'foto_status')
+    list_display = ('nome', 'clube', 'posicao', 'funcao', 'numero', 'gols', 'fonte', 'foto_status')
+    list_filter = ('posicao', 'funcao', 'clube', 'fonte', 'foto_status')
     search_fields = ('nome', 'clube__nome', 'clube__sigla')
 
 

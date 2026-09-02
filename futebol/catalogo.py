@@ -6,6 +6,7 @@ from typing import Any
 
 from .data.catalogo_local import CATALOGO_LOCAL
 from .models import AtletaCatalogo, Clube
+from .posicoes import aplicar_funcoes_catalogo, resolver_funcao
 from .services.api_futebol import mapear_posicao, mapear_sigla_clube, posicao_sigla
 
 
@@ -63,6 +64,7 @@ def gravar_atleta(
             nome=nome,
             clube=clube,
             posicao=posicao,
+            funcao=resolver_funcao(nome, clube.sigla, posicao),
             numero=numero,
             gols=gols or 0,
             fonte=fonte,
@@ -83,6 +85,10 @@ def gravar_atleta(
         if obj.posicao != posicao:
             obj.posicao = posicao
             mudou = True
+    nova_funcao = resolver_funcao(nome, clube.sigla, obj.posicao or posicao)
+    if nova_funcao and obj.funcao != nova_funcao:
+        obj.funcao = nova_funcao
+        mudou = True
     if numero and obj.numero != numero:
         obj.numero = numero
         mudou = True
@@ -115,6 +121,7 @@ def carregar_catalogo_local() -> int:
         )
         if created:
             criados += 1
+    aplicar_funcoes_catalogo(AtletaCatalogo.objects.select_related('clube'))
     return criados
 
 

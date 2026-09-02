@@ -22,9 +22,13 @@ class JogadorForm(forms.ModelForm):
     class Meta:
         model = Jogador
         fields = [
-            'nome', 'clube', 'posicao', 'numero',
+            'nome', 'clube', 'posicao', 'funcao', 'numero',
             'gols', 'assistencias', 'posse_bola', 'foto', 'capitao',
         ]
+        labels = {
+            'posicao': 'Posição na formação',
+            'funcao': 'Função tática',
+        }
         widgets = {
             'nome': forms.TextInput(attrs={'placeholder': 'Ex.: Léo Jardim'}),
             'foto': forms.URLInput(attrs={'placeholder': 'https://...'}),
@@ -50,6 +54,7 @@ class JogadorForm(forms.ModelForm):
         dados['nome'] = catalogo.nome[:60]
         dados['clube'] = str(catalogo.clube_id)
         dados['posicao'] = catalogo.posicao
+        dados['funcao'] = catalogo.funcao or catalogo.posicao
         if catalogo.numero:
             dados['numero'] = str(catalogo.numero)
         dados['gols'] = str(catalogo.gols)
@@ -81,6 +86,12 @@ class JogadorForm(forms.ModelForm):
                 f'na formação {self.escalacao.formacao}.'
             )
         return posicao
+
+    def clean(self):
+        data = super().clean()
+        if data.get('posicao') and not data.get('funcao'):
+            data['funcao'] = data['posicao']
+        return data
 
 
 class NoticiaForm(forms.ModelForm):

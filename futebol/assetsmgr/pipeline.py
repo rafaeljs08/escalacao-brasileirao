@@ -20,6 +20,7 @@ from futebol.assetsmgr.providers.base import PlayerRecord, TeamRecord
 from futebol.assetsmgr.providers.cartola import CLUBES_EXTRA
 from futebol.assetsmgr.validator import validate_image
 from futebol.models import Asset, AtletaCatalogo, Clube
+from futebol.posicoes import resolver_funcao
 
 logger = logging.getLogger('assetsmgr.sync')
 
@@ -174,6 +175,7 @@ def sincronizar(
                     'slug': player.slug or slugify(player.name),
                     'clube': clube,
                     'posicao': player.position or 'MEI',
+                    'funcao': resolver_funcao(player.name, clube.sigla, player.position or 'MEI'),
                     'foto_url': player.photo_url,
                     'fonte': 'cartola' if player.source == 'cartola' else player.source,
                 }

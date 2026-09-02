@@ -34,11 +34,20 @@
         </select>
     </div>
     <div class="campo-form">
-        <label for="id_posicao">Posição</label>
+        <label for="id_posicao">Setor</label>
         <select id="id_posicao" name="posicao">
-            <option value="">Todas</option>
+            <option value="">Todos os setores</option>
             {% for sigla, label in posicoes %}
             <option value="{{ sigla }}"{% if posicao_atual == sigla %} selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="campo-form">
+        <label for="id_funcao">Função tática</label>
+        <select id="id_funcao" name="funcao">
+            <option value="">Todas as funções</option>
+            {% for sigla, label in funcoes %}
+            <option value="{{ sigla }}"{% if funcao_atual == sigla %} selected{% endif %}>{{ label }}</option>
             {% endfor %}
         </select>
     </div>
@@ -63,11 +72,13 @@
     <ul class="catalogo-elenco">
         {% for atleta in grupo.atletas %}
         <li>
-            <span class="badge-pos badge-pos--{{ atleta.posicao|lower }}">{{ atleta.posicao }}</span>
+            <span class="badge-pos badge-pos--{{ atleta.badge_posicao }}">{{ atleta.funcao|default:atleta.posicao }}</span>
             <img src="{{ atleta.foto_publica }}" alt="" width="32" height="32" style="border-radius:8px; object-fit:cover">
             <span class="elenco-item__nome">{{ atleta.nome }}</span>
             <span class="elenco-item__sub">
-                {% if atleta.numero %}#{{ atleta.numero }} · {% endif %}{{ atleta.gols }} gol{{ atleta.gols|pluralize:"s" }}
+                {{ atleta.funcao_rotulo }}
+                {% if atleta.numero %} · #{{ atleta.numero }}{% endif %}
+                · {{ atleta.gols }} gol{{ atleta.gols|pluralize:"s" }}
                 · {{ atleta.get_fonte_display }}
             </span>
         </li>
@@ -75,7 +86,7 @@
     </ul>
 </section>
 {% endfor %}
-{% elif busca or clube_atual or posicao_atual %}
+{% elif busca or clube_atual or posicao_atual or funcao_atual %}
 <div class="vazio">
     <div class="vazio__icone">🔎</div>
     <h3>Nenhum jogador com esse filtro</h3>

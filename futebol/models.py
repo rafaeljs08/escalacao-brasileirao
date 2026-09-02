@@ -3,6 +3,8 @@ from django.db import models
 from django.urls import reverse
 from django.utils import timezone
 
+from futebol.posicoes import FUNCAO_CHOICES, FUNCAO_LABEL, POSICAO_CHOICES, classe_badge
+
 
 class Clube(models.Model):
     """Clube da Série A do Campeonato Brasileiro."""
@@ -110,13 +112,8 @@ class Escalacao(models.Model):
 
 
 class Jogador(models.Model):
-    POSICAO_CHOICES = [
-        ('GOL', 'Goleiro'),
-        ('ZAG', 'Zagueiro'),
-        ('LAT', 'Lateral'),
-        ('MEI', 'Meia'),
-        ('ATA', 'Atacante'),
-    ]
+    POSICAO_CHOICES = POSICAO_CHOICES
+    FUNCAO_CHOICES = FUNCAO_CHOICES
 
     escalacao = models.ForeignKey(
         Escalacao,
@@ -130,7 +127,8 @@ class Jogador(models.Model):
         verbose_name='Clube',
     )
     nome = models.CharField('Nome do jogador', max_length=60)
-    posicao = models.CharField('Posição', max_length=3, choices=POSICAO_CHOICES)
+    posicao = models.CharField('Posição na formação', max_length=3, choices=POSICAO_CHOICES)
+    funcao = models.CharField('Função tática', max_length=4, choices=FUNCAO_CHOICES, blank=True)
     numero = models.PositiveSmallIntegerField(
         'Número da camisa',
         default=10,
@@ -160,7 +158,14 @@ class Jogador(models.Model):
         verbose_name_plural = 'Jogadores'
 
     def __str__(self):
-        return f'{self.nome} — {self.get_posicao_display()}'
+        return f'{self.nome} — {self.funcao_rotulo()}'
+
+    def funcao_rotulo(self):
+        codigo = self.funcao or self.posicao
+        return FUNCAO_LABEL.get(codigo, self.get_posicao_display())
+
+    def badge_posicao(self):
+        return classe_badge(self.funcao or self.posicao)
 
     def get_absolute_url(self):
         return reverse('futebol_time', args=[self.escalacao_id])
@@ -210,6 +215,7 @@ class AtletaCatalogo(models.Model):
         verbose_name='Clube',
     )
     posicao = models.CharField('Posição', max_length=3, choices=Jogador.POSICAO_CHOICES)
+    funcao = models.CharField('Função tática', max_length=4, choices=Jogador.FUNCAO_CHOICES, blank=True)
     numero = models.PositiveSmallIntegerField('Camisa', null=True, blank=True)
     gols = models.PositiveIntegerField('Gols', default=0)
     fonte = models.CharField('Origem', max_length=20, choices=FONTE_CHOICES, default='local')
@@ -236,6 +242,13 @@ class AtletaCatalogo(models.Model):
         if self.foto_url:
             return self.foto_url
         return '/assets/placeholders/player.png'
+
+    def funcao_rotulo(self):
+        codigo = self.funcao or self.posicao
+        return FUNCAO_LABEL.get(codigo, self.get_posicao_display())
+
+    def badge_posicao(self):
+        return classe_badge(self.funcao or self.posicao)
 
 
 class Noticia(models.Model):
