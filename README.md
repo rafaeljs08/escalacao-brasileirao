@@ -10,7 +10,10 @@
 
 [🎬 Demonstração](#-demonstração) ·
 [🚀 Instalação](#-instalação-e-execução) ·
-[🌐 Rotas](#-rotas)
+[📦 Catálogo](#-como-o-catálogo-funciona) ·
+[🔌 API Futebol](#-api-futebol) ·
+[🌐 Rotas](#-rotas) ·
+[🧪 Testes](#-testes)
 
 </div>
 
@@ -23,6 +26,10 @@ vertical, no padrão visual dos aplicativos de fantasy game. O time não pertenc
 clube específico: cada jogador é cadastrado com o clube da Série A a que pertence, então
 é possível ter um atacante do Flamengo ao lado de um meia do Palmeiras.
 
+O elenco vem de um **catálogo local dos 20 clubes** (82 atletas). Com uma chave da
+[API Futebol](https://www.api-futebol.com.br/documentacao), o comando `sync_api_futebol`
+atualiza esse cadastro com a artilharia oficial do Brasileirão.
+
 Projeto desenvolvido para a disciplina **Programação Backend (Python/Django)**.
 
 ---
@@ -34,8 +41,9 @@ Projeto desenvolvido para a disciplina **Programação Backend (Python/Django)**
 | **Times** | Crie quantos times quiser, cada um com nome, cartoleiro e formação |
 | **7 formações** | `3-4-3`, `3-5-2`, `4-3-3`, `4-4-2`, `4-5-1`, `5-3-2` e `5-4-1` |
 | **20 clubes** | Todos os clubes da Série A, com escudo, sigla e cores próprias |
-| **Catálogo de jogadores** | Busca no elenco da Série A ao escalar; lista completa em `/atletas/` |
-| **API Futebol** | Com chave, sincroniza a artilharia oficial do Brasileirão |
+| **Catálogo de jogadores** | 82 atletas no `seed`; lista em `/atletas/` com filtro por nome, clube e posição |
+| **Busca ao escalar** | Digite o nome no formulário e os campos (clube, posição, camisa, gols) preencham sozinhos |
+| **API Futebol** | Com `API_FUTEBOL_KEY`, sincroniza a artilharia oficial (`campeonato_id = 10`) |
 | **Campo interativo** | Vagas livres são clicáveis e já abrem o formulário na posição certa |
 | **Estatísticas** | Gols, assistências e posse de bola por atleta, com totais do time |
 | **Notícias** | Publique notícias vinculadas a cada jogador |
@@ -72,6 +80,19 @@ Escalação no gramado, com jogadores de clubes diferentes da Série A, estatís
 
 ![Campo da escalação](docs/assets/demo-campo.png)
 
+### Catálogo da Série A
+
+Página **Jogadores**: 82 atletas agrupados por clube, com filtro de nome, time e posição.
+
+![Catálogo de atletas](docs/assets/demo-catalogo-atletas.png)
+
+### Busca no formulário
+
+Ao escalar ou editar, a busca **“Buscar no elenco da Série A”** preenche nome, clube,
+posição, camisa e gols — ainda é possível cadastrar na mão.
+
+![Busca no elenco](docs/assets/demo-busca-elenco.png)
+
 ### Cadastro e edição de jogador
 
 Formulário de CRUD pelo site: clube, posição, gols, assistências e capitão — sem usar o admin.
@@ -82,40 +103,82 @@ Formulário de CRUD pelo site: clube, posição, gols, assistências e capitão 
 
 ## 🚀 Instalação e execução
 
+### GitHub
+
 ```bash
-# 1. Clone o repositório
 git clone https://github.com/rafaeljs08/escalacao-brasileirao.git
 cd escalacao-brasileirao
+```
 
-# 2. Crie e ative o ambiente virtual
+### Origin (Cursor) — só no WSL, macOS ou Linux
+
+No Windows o Origin CLI **não** roda no PowerShell. Use o WSL:
+
+```bash
+# Run in WSL (Origin CLI is not available in PowerShell)
+# Install the Origin CLI
+curl -fsSL https://downloads.cursor.com/origin/install.sh | sh
+
+# Sign in (also sets up git credentials)
+origin auth login
+
+# Clone the repository
+origin repo clone rafael-junqueira/escalabr
+```
+
+Se o comando `origin` não for encontrado:
+
+```bash
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+Repositório no Cursor: [cursor.com/codebase/rafael-junqueira/escalabr](https://cursor.com/codebase/rafael-junqueira/escalabr)
+(privado; dá para mudar nas configurações da página).
+Documentação: [Origin CLI](https://cursor.com/docs/origin/cli)
+
+### Depois do clone
+
+```bash
+# 1. Crie e ative o ambiente virtual
 python -m venv venv
-# Windows
+# Windows (PowerShell)
 venv\Scripts\Activate.ps1
-# Linux / macOS
+# Linux / macOS / WSL
 source venv/bin/activate
 
-# 3. Instale as dependências
+# 2. Instale as dependências
 pip install -r requirements.txt
 
-# 4. Aplique as migrações
+# 3. Aplique as migrações
 python manage.py migrate
 
-# 5. Cadastre os 20 clubes, o catálogo de jogadores, os escudos e um time de exemplo
+# 4. Cadastre os 20 clubes, o catálogo de 82 jogadores, os escudos e um time de exemplo
 python manage.py seed_brasileirao
 
-# 6. (Opcional) Sincronize a artilharia oficial da API Futebol
+# 5. (Opcional) Sincronize a artilharia oficial da API Futebol
 #    Cadastre a chave em https://dash.api-futebol.com.br/cadastrar
 cp .env.example .env   # edite API_FUTEBOL_KEY
 python manage.py sync_api_futebol
 
-# 7. (Opcional) Crie um superusuário para acessar o admin
+# 6. (Opcional) Crie um superusuário para acessar o admin
 python manage.py createsuperuser
 
-# 8. Inicie o servidor
+# 7. Inicie o servidor
 python manage.py runserver
 ```
 
 Acesse **http://127.0.0.1:8000/**
+
+---
+
+## 📦 Como o catálogo funciona
+
+O menu **Jogadores** lista o elenco de referência. Sem chave da API o app já funciona:
+`seed_brasileirao` grava 82 atletas dos 20 clubes (fonte `local`).
+
+No formulário de escalação, a busca consulta `/atletas.json` e preenche o cadastro.
+A posição escolhida ainda precisa ter vaga livre na formação do time.
 
 ---
 
@@ -143,7 +206,7 @@ Acesse **http://127.0.0.1:8000/**
 A lista oficial de atletas vem de [API Futebol](https://www.api-futebol.com.br/documentacao)
 (`https://api.api-futebol.com.br/v1`). Toda chamada exige o header
 `Authorization: Bearer SUA_API_KEY`. Sem a chave o app **não quebra**: o comando
-`seed_brasileirao` já carrega um catálogo local dos 20 clubes da Série A.
+`seed_brasileirao` já carrega o catálogo local.
 
 A API **não publica elenco completo** de cada time no plano comum. O que dá para
 puxar de verdade:
@@ -243,10 +306,13 @@ time pelo comando `seed_brasileirao`, sem depender de arquivos externos.
 escalacao-brasileirao/
 ├── manage.py
 ├── requirements.txt
+├── .env.example                   # API_FUTEBOL_KEY (opcional)
 ├── docs/assets/
 │   ├── demo-escalacao.mp4         # Tutorial visual do app
 │   ├── demo-lista-times.png
 │   ├── demo-campo.png
+│   ├── demo-catalogo-atletas.png  # Lista /atletas/
+│   ├── demo-busca-elenco.png      # Busca no formulário
 │   └── demo-formulario-jogador.png
 ├── core/                          # Configuração do projeto
 │   ├── settings.py
@@ -270,6 +336,17 @@ escalacao-brasileirao/
     │   └── img/clubes/            # Escudos SVG
     └── templates/futebol/
 ```
+
+---
+
+## 🧪 Testes
+
+```bash
+python manage.py test futebol
+```
+
+Cobre o seed do catálogo, filtros de `/atletas/` e `/atletas.json`, o preenchimento
+pelo `catalog_id` no formulário e a sincronização (local e artilharia mockada).
 
 ---
 
