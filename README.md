@@ -176,14 +176,24 @@ python manage.py sync_api_futebol
 python sync.py --dry-run
 python manage.py sync_assets
 
-# 7. (Opcional) Crie um superusuário para acessar o admin
-python manage.py createsuperuser
-
-# 8. Inicie o servidor
+# 7. Inicie o servidor
 python manage.py runserver
 ```
 
 Acesse **http://127.0.0.1:8000/**
+
+### Painel admin
+
+O comando `seed_brasileirao` cria o acesso **padrão do site**. Use no canto
+superior direito (**Admin**) ou em `/admin/`:
+
+| Campo | Valor |
+|-------|--------|
+| **Usuário** | `admin` |
+| **Senha** | `admin` |
+
+É só para uso local / trabalho da disciplina. Se for publicar o projeto,
+troque a senha com `python manage.py changepassword admin`.
 
 ---
 
@@ -227,7 +237,7 @@ A posição escolhida ainda precisa ter vaga livre na formação do time.
 | `/api/assets/status` | `GET` | Totais e último sync |
 | `/api/assets/missing` | `GET` | Assets que não estão OK |
 | `/api/sync/status` | `GET` | Relatório do último sync |
-| `/admin/` | `GET` / `POST` | Painel administrativo |
+| `/admin/` | `GET` / `POST` | Painel administrativo — usuário `admin` · senha `admin` |
 
 ---
 

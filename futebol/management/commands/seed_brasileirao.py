@@ -1,10 +1,27 @@
 from pathlib import Path
 
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 
 from futebol.catalogo import carregar_catalogo_local
 from futebol.models import AtletaCatalogo, Clube, Escalacao, Jogador
+
+ADMIN_USUARIO = 'admin'
+ADMIN_SENHA = 'admin'
+
+
+def garantir_admin():
+    """Cria ou restaura o acesso padrão do painel /admin/."""
+    usuario, _criado = User.objects.get_or_create(
+        username=ADMIN_USUARIO,
+        defaults={'email': 'admin@localhost'},
+    )
+    usuario.is_staff = True
+    usuario.is_superuser = True
+    usuario.set_password(ADMIN_SENHA)
+    usuario.save()
+    return usuario
 
 # nome, sigla, cidade, UF, cor primária, cor secundária
 CLUBES = [
@@ -114,6 +131,11 @@ class Command(BaseCommand):
         atletas = carregar_catalogo_local()
         self.stdout.write(self.style.SUCCESS(
             f'Catálogo local: {atletas} atletas novos ({AtletaCatalogo.objects.count()} no total).'
+        ))
+
+        garantir_admin()
+        self.stdout.write(self.style.SUCCESS(
+            f'Admin padrão: usuário {ADMIN_USUARIO} · senha {ADMIN_SENHA} → /admin/'
         ))
 
         if options['sem_demo'] or Escalacao.objects.exists():

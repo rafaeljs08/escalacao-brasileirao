@@ -1,6 +1,7 @@
 from io import StringIO
 from unittest.mock import patch
 
+from django.contrib.auth.models import User
 from django.core.management import call_command
 from django.test import TestCase, override_settings
 
@@ -63,6 +64,18 @@ class CatalogoTests(TestCase):
         self.assertGreaterEqual(AtletaCatalogo.objects.count(), 60)
         self.assertTrue(AtletaCatalogo.objects.filter(nome='Pedro', clube__sigla='FLA').exists())
         self.assertTrue(AtletaCatalogo.objects.filter(nome='Léo Jardim', clube__sigla='VAS').exists())
+
+    def test_seed_cria_admin_padrao(self):
+        admin = User.objects.get(username='admin')
+        self.assertTrue(admin.is_superuser)
+        self.assertTrue(admin.is_staff)
+        self.assertTrue(admin.check_password('admin'))
+        resposta = self.client.post('/admin/login/', {
+            'username': 'admin',
+            'password': 'admin',
+            'next': '/admin/',
+        })
+        self.assertEqual(resposta.status_code, 302)
 
     def test_pagina_de_atletas(self):
         resposta = self.client.get('/atletas/')
