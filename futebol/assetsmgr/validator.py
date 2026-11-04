@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import imghdr
 from pathlib import Path
 from typing import Any
 
@@ -31,16 +30,12 @@ def validate_image(path: str | Path) -> dict[str, Any]:
             return {'valid': False, 'error': 'SVG inválido'}
         return {'valid': True, 'width': None, 'height': None, 'format': 'SVG', 'size': tamanho}
 
-    tipo = imghdr.what(arquivo)
-    if tipo not in {'png', 'jpeg', 'gif', 'webp'}:
-        # Pillow ainda pode abrir; imghdr não conhece todos os webp.
-        pass
     try:
         with Image.open(arquivo) as imagem:
             imagem.verify()
         with Image.open(arquivo) as imagem:
             largura, altura = imagem.size
-            formato = imagem.format or (tipo or 'UNKNOWN').upper()
+            formato = imagem.format or 'UNKNOWN'
     except (UnidentifiedImageError, OSError, ValueError) as exc:
         return {'valid': False, 'error': f'corrompida: {exc}'}
 
