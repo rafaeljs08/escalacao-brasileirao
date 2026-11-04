@@ -114,41 +114,14 @@ CRUD pelo site: clube, posição na formação, função tática, gols, assistê
 
 ## 🚀 Instalação e execução
 
-### GitHub
+### Clonar
 
 ```bash
 git clone https://github.com/rafaeljs08/escalacao-brasileirao.git
 cd escalacao-brasileirao
 ```
 
-### Origin (Cursor) — só no WSL, macOS ou Linux
-
-No Windows o Origin CLI **não** roda no PowerShell. Use o WSL:
-
-```bash
-# Run in WSL (Origin CLI is not available in PowerShell)
-# Install the Origin CLI
-curl -fsSL https://downloads.cursor.com/origin/install.sh | sh
-
-# Sign in (also sets up git credentials)
-origin auth login
-
-# Clone the repository
-origin repo clone rafael-junqueira/escalabr
-```
-
-Se o comando `origin` não for encontrado:
-
-```bash
-echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
-source ~/.bashrc
-```
-
-Repositório no Cursor: [cursor.com/codebase/rafael-junqueira/escalabr](https://cursor.com/codebase/rafael-junqueira/escalabr)
-(privado; dá para mudar nas configurações da página).
-Documentação: [Origin CLI](https://cursor.com/docs/origin/cli)
-
-### Depois do clone
+### Configurar e rodar
 
 ```bash
 # 1. Crie e ative o ambiente virtual
@@ -184,16 +157,18 @@ Acesse **http://127.0.0.1:8000/**
 
 ### Painel admin
 
-O comando `seed_brasileirao` cria o acesso **padrão do site**. Use no canto
-superior direito (**Admin**) ou em `/admin/`:
+O comando `seed_brasileirao` cria o usuário **`admin`** (senha **`admin`**) para acessar
+`/admin/` em desenvolvimento, e **redefine essa senha a cada execução**. Esse acesso é
+público (está neste README), então use-o **só na sua máquina**.
 
-| Campo | Valor |
-|-------|--------|
-| **Usuário** | `admin` |
-| **Senha** | `admin` |
+Para qualquer ambiente acessível por outras pessoas:
 
-É só para uso local / trabalho da disciplina. Se for publicar o projeto,
-troque a senha com `python manage.py changepassword admin`.
+```bash
+python manage.py createsuperuser        # crie o seu administrador
+python manage.py changepassword admin   # ou troque a senha do admin padrão
+```
+
+e não rode `seed_brasileirao` de novo nesse ambiente, pois ele restaura `admin`/`admin`.
 
 ---
 
@@ -237,7 +212,7 @@ A posição escolhida ainda precisa ter vaga livre na formação do time.
 | `/api/assets/status` | `GET` | Totais e último sync |
 | `/api/assets/missing` | `GET` | Assets que não estão OK |
 | `/api/sync/status` | `GET` | Relatório do último sync |
-| `/admin/` | `GET` / `POST` | Painel administrativo — usuário `admin` · senha `admin` |
+| `/admin/` | `GET` / `POST` | Painel administrativo (login de superusuário) |
 
 ---
 
