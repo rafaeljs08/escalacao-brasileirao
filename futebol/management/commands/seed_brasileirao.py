@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from django.conf import settings
@@ -7,21 +8,28 @@ from django.core.management.base import BaseCommand
 from futebol.catalogo import carregar_catalogo_local
 from futebol.models import AtletaCatalogo, Clube, Escalacao, Jogador
 
-ADMIN_USUARIO = 'admin'
-ADMIN_SENHA = 'admin'
-
-
 def garantir_admin():
-    """Cria ou restaura o acesso padrão do painel /admin/."""
-    usuario, _criado = User.objects.get_or_create(
-        username=ADMIN_USUARIO,
+    """Cria o admin do painel /admin/ só se ADMIN_SENHA estiver definida.
+
+    Usuário e senha vêm do ambiente (ou do .env): ADMIN_USUARIO (padrão "admin")
+    e ADMIN_SENHA. Sem senha, nada é criado. Um usuário que já existe nunca tem
+    a senha redefinida.
+    """
+    usuario_nome = os.environ.get('ADMIN_USUARIO', 'admin').strip() or 'admin'
+    senha = os.environ.get('ADMIN_SENHA', '')
+    if not senha:
+        return None, usuario_nome
+    usuario, criado = User.objects.get_or_create(
+        username=usuario_nome,
         defaults={'email': 'admin@localhost'},
     )
-    usuario.is_staff = True
-    usuario.is_superuser = True
-    usuario.set_password(ADMIN_SENHA)
-    usuario.save()
-    return usuario
+    if criado:
+        usuario.is_staff = True
+        usuario.is_superuser = True
+        usuario.set_password(senha)
+        usuario.save()
+    return (usuario if criado else None), usuario_nome
+
 
 # nome, sigla, cidade, UF, cor primária, cor secundária
 CLUBES = [
@@ -133,10 +141,16 @@ class Command(BaseCommand):
             f'Catálogo local: {atletas} atletas novos ({AtletaCatalogo.objects.count()} no total).'
         ))
 
-        garantir_admin()
-        self.stdout.write(self.style.SUCCESS(
-            f'Admin padrão: usuário {ADMIN_USUARIO} · senha {ADMIN_SENHA} → /admin/'
-        ))
+        criado, usuario_nome = garantir_admin()
+        if criado:
+            self.stdout.write(self.style.SUCCESS(f'Admin "{usuario_nome}" criado com a senha de ADMIN_SENHA → /admin/'))
+        elif os.environ.get('ADMIN_SENHA'):
+            self.stdout.write(f'Admin "{usuario_nome}" já existe; a senha não foi alterada.')
+        else:
+            self.stdout.write(
+                'Nenhum admin criado. Defina ADMIN_SENHA no .env ou rode '
+                '"python manage.py createsuperuser".'
+            )
 
         if options['sem_demo'] or Escalacao.objects.exists():
             return
