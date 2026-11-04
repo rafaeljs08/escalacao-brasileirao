@@ -1,3 +1,4 @@
+import os
 from io import StringIO
 from unittest.mock import patch
 
@@ -65,17 +66,26 @@ class CatalogoTests(TestCase):
         self.assertTrue(AtletaCatalogo.objects.filter(nome='Pedro', clube__sigla='FLA').exists())
         self.assertTrue(AtletaCatalogo.objects.filter(nome='Léo Jardim', clube__sigla='VAS').exists())
 
-    def test_seed_cria_admin_padrao(self):
-        admin = User.objects.get(username='admin')
-        self.assertTrue(admin.is_superuser)
-        self.assertTrue(admin.is_staff)
-        self.assertTrue(admin.check_password('admin'))
-        resposta = self.client.post('/admin/login/', {
-            'username': 'admin',
-            'password': 'admin',
-            'next': '/admin/',
-        })
-        self.assertEqual(resposta.status_code, 302)
+    def test_seed_nao_cria_admin_sem_senha(self):
+        with patch.dict(os.environ):
+            os.environ.pop('ADMIN_SENHA', None)
+            os.environ.pop('ADMIN_USUARIO', None)
+            call_command('seed_brasileirao', '--sem-demo', stdout=StringIO())
+        self.assertFalse(User.objects.filter(username='admin').exists())
+
+    def test_seed_cria_admin_com_senha_do_ambiente(self):
+        with patch.dict(os.environ, {'ADMIN_USUARIO': 'chefe', 'ADMIN_SENHA': 'senha-de-teste-123'}):
+            call_command('seed_brasileirao', '--sem-demo', stdout=StringIO())
+        chefe = User.objects.get(username='chefe')
+        self.assertTrue(chefe.is_superuser and chefe.is_staff)
+        self.assertTrue(chefe.check_password('senha-de-teste-123'))
+        self.assertFalse(User.objects.filter(username='admin').exists())
+
+    def test_seed_nao_redefine_senha_de_admin_existente(self):
+        User.objects.create_superuser('chefe', 'c@x.com', 'senha-original-123')
+        with patch.dict(os.environ, {'ADMIN_USUARIO': 'chefe', 'ADMIN_SENHA': 'outra-senha-456'}):
+            call_command('seed_brasileirao', '--sem-demo', stdout=StringIO())
+        self.assertTrue(User.objects.get(username='chefe').check_password('senha-original-123'))
 
     def test_pagina_de_atletas(self):
         resposta = self.client.get('/atletas/')

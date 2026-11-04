@@ -157,18 +157,20 @@ Acesse **http://127.0.0.1:8000/**
 
 ### Painel admin
 
-O comando `seed_brasileirao` cria o usuário **`admin`** (senha **`admin`**) para acessar
-`/admin/` em desenvolvimento, e **redefine essa senha a cada execução**. Esse acesso é
-público (está neste README), então use-o **só na sua máquina**.
-
-Para qualquer ambiente acessível por outras pessoas:
+O `seed_brasileirao` **não cria** administrador por conta própria. Para ter acesso a `/admin/`,
+use uma das opções:
 
 ```bash
-python manage.py createsuperuser        # crie o seu administrador
-python manage.py changepassword admin   # ou troque a senha do admin padrão
+# Opção 1: crie o seu superusuário
+python manage.py createsuperuser
+
+# Opção 2: defina a senha no .env e rode o seed (cria o usuário "admin")
+#   ADMIN_USUARIO=admin        (opcional, "admin" é o padrão)
+#   ADMIN_SENHA=uma-senha-forte
+python manage.py seed_brasileirao
 ```
 
-e não rode `seed_brasileirao` de novo nesse ambiente, pois ele restaura `admin`/`admin`.
+Se o usuário já existir, o seed **não altera a senha dele**.
 
 ---
 
